@@ -617,7 +617,7 @@ wget --random-wait  --limit-rate=30K -r -N -p -U Mozilla  http://erotikes-istori
 wget   --mirror  --page-requisites    --html-extension    --convert-links   -c   http://erotikes-istories.com  -o erotikes-istorie.txt
 wget   --mirror  --page-requisites    --html-extension    --convert-links   -c https://athensescorts.gr
 wget -r   --mirror   --page-requisites --convert-links --span-hosts --domains egotoagrimi.files.wordpress.com,egotoagrimi.wordpress.com   http://egotoagrimi.wordpress.com
-wget  --user eromelodios --password panagia3   --tries=100 --timeout=120  --dns-timeout=120 --connect-timeout=120  --read-timeout=120  --limit-rate=1000K  --no-check-certificate --span-hosts --no-clobber --recursive --page-requisites   --html-extension  --no-parent  --user-agent="Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"    https://www.nudismlife.com/
+wget  --user eeeerrrr  --password ppppppp3   --tries=100 --timeout=120  --dns-timeout=120 --connect-timeout=120  --read-timeout=120  --limit-rate=1000K  --no-check-certificate --span-hosts --no-clobber --recursive --page-requisites   --html-extension  --no-parent  --user-agent="Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"    https://www.nudismlife.com/
 
 ###########################################################################################################################################
 ### rip sites
