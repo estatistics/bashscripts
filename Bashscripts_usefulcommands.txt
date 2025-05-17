@@ -1,0 +1,1493 @@
+
+yt-dlp  --cookies-from-browser firefox:/mnt/tmp_ssd/firefox/default/ --limit-rate 800k --write-description --embed-metadata --download-archive archive.txt -o "%(title)s_[%(id)s].%(ext)s" https://www.youtube.com/@DomDolla/videos
+
+# find multiple extensions and make yt-dlp archive
+find ./ -type f \( -name \*.webm -o -name \*.mkv \) | grep -oh "\[[-_0-9a-zA-Z]\+\+\]" | cut -d "[" -f 2 | cut -d "]" -f 1 > archive.txt
+----------------------------------------------------------------------------------------------------------------
+------------------------------------------------- F F M P E G --------------------------------------------------------
+- hardware DECODING - ENCODING
+#YOUTUBE DONT SUPPORT FLAC
+
+# TRANSPOSE, SCALING -90 MOBILE VIDEOS with quality parameters
+ffmpeg  -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128 -i a.MP4  -vf 'transpose=2,fps=30,format=nv12,hwupload,scale_vaapi=w=2560:h=1440:format=nv12'  -strict experimental -video_track_timescale 90000  -c:v hevc_vaapi  -b:v 17M -af volume=1.5 -c:a aac -qscale:a 0 -b:a 120K  "a_${vids/.*}.mp4"
+
+# SLOW DOWN VIDEO (especially for musicvids *2)
+# with COLOR CORRECTION & DESHAKE & SLOW DOWN VIDEO-MUSIC & SCALING & SCREEN DOWNGRADE (b:v 49 vs 17) - sound volume x1.5.
+for vids in *.mp4; do ffmpeg  -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128 -i "$vids" -vf 'deshake, unsharp=lx=7:ly=7:la=1:cx=7:cy=7:ca=1,eq=brightness=0.2:contrast=0.7:saturation=1:gamma=1,format=nv12,setpts=2*PTS,fps=30,hwupload,scale_vaapi=w=1920:h=1080:format=nv12' -strict experimental -video_track_timescale 90000  -c:v hevc_vaapi  -b:v 17M  -filter:a "atempo=0.5" -af volume=1.5  -c:a aac -qscale:a 0 -b:a 120K "a_${vids/.*}.mp4"; done;
+
+# scale_vaapi=w=2560:h=1440:
+# Crop 840 pixels from height (top bottom) and put video in the center. Also, create pad in width dimension to result 1920. 
+# CROP, DESHAKE
+ffmpeg -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128 -i vid.mp4 -ss 0:00:00 -to 00:00:03 -vf "crop=in_w:in_h-840, deshake, unsharp=lx=7:ly=7:la=1:cx=7:cy=7:ca=1, pad=1920:1080:ow/2:0:color=red,fps=30,format=nv12,hwupload"  -strict experimental -video_track_timescale 90000  -c:v hevc_vaapi  -b:v 17M  -c:a aac -qscale:a 0 -b:a 120K  vid.mp4
+
+ 
+# CURVES. UNSHARP, SATURATION, NO SOUND ---- FOR GOPRO VIDS --- NOTE 'SS' PART
+for vids in *.mp4; do ffmpeg  -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128 -i "$vids" -ss 0:00:00 -to 00:00:10 -vf 'curves=preset=lighter,unsharp=lx=7:ly=7:la=1:cx=7:cy=7:ca=1,setpts=0.5*PTS,eq=saturation=1.2,format=nv12,fps=30,hwupload,scale_vaapi=w=2560:h=1440:format=nv12'  -strict experimental   -c:v hevc_vaapi  -b:v 20M -video_track_timescale 90000 -an -fflags  +genpts "a_${vids/.*}.mp4"; done;
+
+#WORKING curves
+ffmpeg  -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128 -i vid.mp4 -vf "curves=all='0/0 0.8/0.8 1/1',format=nv12, hwupload" -strict experimental   -c:v hevc_vaapi cp.mp4
+
+--------
+# SCALING AND PADDING - CAUTION no scale_vaapi - REMOVE "ss"
+for vids in *.mp4; do ffmpeg -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128 -i "$vids" -ss 0:00:00 -to 00:00:03  -vf  "format=nv12, scale=height=1920:width=1080, pad=height=1920:width=1080:color=red,hwupload"  -c:v hevc_vaapi -video_track_timescale 90000 -rc_mode CQP -global_quality 20 "a_${vids/.*}.mp4"; done;
+
+# single still image + audio file
+ffmpeg -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128  -r 0.01 -loop 1 -i image2.jpg -i audio.mp3  -c:v libx264 -tune stillimage -preset  ultrafast -c:a copy -pix_fmt yuv420p  -shortest  output_speed.mp4
+
+--------
+# to encode files in multiple subfolders
+pth0="/media/sdd1/musicvids";
+cd  "${pth0}";
+while read -r LINE; do
+cd  "${LINE}";
+
+for vids in 20*.mp4; do ffmpeg  -hwaccel vaapi -hwaccel_output_format yuv420p -vaapi_device /dev/dri/renderD128 -i "$vids" -vf 'fps=30,hwupload,scale_vaapi=w=720:h=1440:format=nv12' -strict experimental -video_track_timescale 90000  -c:v hevc_vaapi  -b:v 1.7M  -c:a aac -qscale:a 0 -b:a 70K "a_${vids/.*}.mp4"; done;
+
+trash-put 20*.*;
+echo "${LINE}";
+cd  "${pth0}";
+done < f.txt
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Concetrate merge / join MP4 / merge vides without RENCODING
+echo "" >./vids.txt; for f in *.mp4 *.MP4 *.webm *.mkv, *.m4a; do echo "file '$PWD/$f'" >> ./vids.txt; done; featherpad ./vids.txt;
+
+ffmpeg  -f concat  -safe 0 -i './vids.txt'  -strict -2  -c copy  -fflags  +genpts output.mp4
+
+# Change Rotation in metadata - dont work
+ffmpeg -i a_VID.MP4  -metadata:s:v:0 "rotate=1"   -strict -2  -c copy   -fflags  +genpts vida_ok_c.mp4
+
+
+### S P E E D & Compressing multiple files, in high quality from GOPRO, removing Audio file (-an)
+-vb 60M or  -b:v 30M 
+-vf "eq=brightness=0.2:contrast=0.7:saturation=1:gamma=1"
+-vf  "setpts=0.50*PTS"                             # double speed of video (fast)
+-vf "setpts=2.0*PTS"                               # half speed of video (slow)
+-filter:a "atempo=2.0"                             # double speed audio double
+-vf "scale=1920:1080"                              # libx265 with scaling, changing resolution
+-c:a copy                                          # copy audio as it is
+-filter:v "crop=in_w:in_h-360"                     # croping
+-vf "crop=1024:600"                                # croping
+-fflags +genpts                                    # generate timestamps
+-an                                                # remove sound/audio
+-c:a libmp3lame -qscale:a 0 -b:a 320K              # mp3 audio options
+-shortest                                          # cut video / audio to shortest
+-i "vid.mp4" -i "_audio.mp3"  -shortest            # A D D I N G   A U D I O
+-vf "transpose=1"                                  #rotate, transpose  0 = 90° counterclockwise and vertical flip (default), 1 = 90° clockwise, 2 = 90° counterclockwise   3 = 90° clockwise and vertical flip
+-c copy -metadata:s:v:0 "rotate=1"                 # rotate WITHOUT rencoding  1=anticlockwise  - LEFT
+-filter:v fps=fps=29.583                           # Change FRAME RATES
+-crf 19                                            # quality of video
+
+# Extract high quality pics from the last frame of the video (eg tiktok)
+# Warning if audio is longer than video
+for vids in *.mp4; do ffmpeg -sseof -1 -i "$vids" -vsync 0 -q:v 1 -update true "$vids".jpg; done
+
+
+# MERGE FILES --- WARNING TBN MUST MATCH!
+
+#extract audio as AAC without re-encoding
+ffmpeg -i output.mp4 -vn -acodec copy output-audio.aac
+
+#extract audio as MP3 without re-encoding in multiple files
+for mm in *.*;  do ~/Downloads/ffmpeg -i "$mm"  -c:a libmp3lame  "${mm//.*}.mp3"  ; done;
+ffmpeg -i johnyman.mov  -c:a libmp3lame  johnyman.mp3
+#extract audio as MP3 without re-encoding in all subfolders
+find . -exec ffmpeg -i   {} -c:a libmp3lame  {}.mp3 \;
+
+# Replace / merge Audio without re-enconding 
+ffmpeg -i "johnyman.mov" -i "johnyman_ok.mp3"  -c:v copy -map 0:v:0 -map 1:a:0 "video_johny.mp4"
+
+# Crop by subtracting pixels
+ffmpeg -i "byzantineblue1.ogv"  -crf 18  -vcodec libx265   -c:a copy  -vf "crop=in_w-26:in_h-16" -pix_fmt yuv420p "byzantineblue1.mp4"
+ffmpeg -i "byzantineblue2.ogv"  -crf 18  -vcodec libx265   -c:a copy  -vf "pad=width=1280:x=0:y=0:color=black,crop=w=1280:h=720:x=0:y=96" -pix_fmt yuv420p "byzantineblue2.mp4"
+ 
+# Blurring
+ffmpeg -i VID_20220101_014106.mp4  -filter_complex boxblur=6[bg]  -map [bg]  -map 0:a  -crf 19  -vcodec libx265 -vb 20M   -fflags +genpts blurredVideo.avi
+
+ffmpeg -i GOPR0009.MP4 -i GOPR0010.MP4 \
+-filter_complex "[0:v] [1:v]  concat= n=2:v=1,vcodec=libx265,vb=20M,crf=14,r=32,scale=1920:780,setpts=0.20*PTS [v]" \
+-map "[v]"   video_output_01.avi
+ffmpeg -i katerina.ogv  -crf 19  -vcodec libx265 -vb 20M  video_output_01.avi
+
+### I M A G E  MERGES 
+ffmpeg  -r 1 -f concat -safe 0 -i "/home/user/Data/image_files.txt"   -crf 18  -vcodec libx265    video_output_01.avi
+
+### in bulk
+for avii in *.mp4 *.webm *.mkv *.webm *.ogv;    do ffmpeg  -fflags +genpts -i "$avii" -vcodec  libx265 -vb 20M  -r 30  -crf 17  "a_${avii//.*}.mp4"   ; done;
+
+###  find if videos has audio in it
+for f in *.* ; do ffprobe -i "$f" -show_streams  2>&1 | grep 'Stream #0:1'; done;
+
+R E C O D I N G    ONLY    A U D I O
+ffmpeg -i "vid.avi" -vcodec copy -acodec aac -b:a 327680 " output.mp4"
+
+###   TRIM  specific part of a video file
+ffmpeg -i video_output_01.avi -filter_complex \
+ "[0:v]trim=start=0:duration=1365[clpA];\
+  [0:v]trim=start=1369:duration=652,setpts=PTS-STARTPTS[clpB];\
+  [clpA][clpB]concat[out1]" -map [out1]  -crf 14  -vcodec libx265  -vb 30M  vid.mp4
+
+###   TRIM / REMOVE / MERGE / CUT / SPLIT specific part of a video without reenconding.
+ffmpeg  -i "VID_20240101_152707.mp4"  -ss 00:00 -t 21:55  -c copy "aaaa4.webm"
+ffmpeg  -i syn.mp4   -crf 14  -vcodec libx265  -ss 0:00:00 -to 1:37:20  "syn_2.mp4"
+ffmpeg  -i karnavali2025_0017.mp4   -ss 0:00:05   -to 00:00:22    -c copy "a3.mp4"
+
+
+###   B L A C K  S C R E E N specific part of a video file ###
+~/Downloads/_LINUX_PKGS/ffmpeg-5.0/ffmpeg  -i  /mnt/HDD_01/VID.mp4 -filter_complex \
+ "[0:v]trim=start=0:duration=82,setpts=PTS-STARTPTS[clpA];\
+  [0:v]trim=start=82:duration=4,setpts=PTS-STARTPTS[clpB];\
+  [clpB]drawbox=color=black:t=fill[DclpA];\
+  [clpA][DclpA]concat[clpAB];\
+   [0:v]trim=start=86:duration=1274,setpts=PTS-STARTPTS[clpC];\
+  [clpAB][clpC]concat[clpABC];\
+  [0:v]trim=start=1360:duration=21,setpts=PTS-STARTPTS[clpD];\
+  [clpD]drawbox=color=black:t=fill[DclpB];\
+  [clpABC][DclpB]concat[AclpAB];\
+   [0:v]trim=start=1381:duration=199,setpts=PTS-STARTPTS[clpE];\
+  [AclpAB][clpE]concat[clpABCE];\
+  [0:v]trim=start=1580:duration=26,setpts=PTS-STARTPTS[clpF];\
+  [clpF]drawbox=color=black:t=fill[DclpC];\
+  [clpABCE][DclpC]concat[BclpAB];\
+  [0:v]trim=start=1606:duration=325,setpts=PTS-STARTPTS[clpG];\
+  [BclpAB][clpG]concat[out1]" -map [out1] -map 0:a:0 -c:a aac -crf 14  -vcodec libx265  -vb 40M output.mp4
+
+
+###   R O T A T E  specific part of a video file 
+ffmpeg -i GOPR0013.MP4 -filter_complex \
+ "[0:v]trim=start=0:duration=516[clpA];\
+  [0:v]trim=start=516:duration=1,setpts=PTS-STARTPTS[clpB];\
+  [clpB]vflip, hflip[clpBf];\
+  [clpA][clpBf]concat[clpAB];\
+  [0:v]trim=start=517:duration=1204,setpts=PTS-STARTPTS[clpC];\
+  [0:v]trim=start=1721:duration=155,setpts=PTS-STARTPTS[clpD];\
+  [clpD]vflip, hflip[clpDf];\
+  [clpC][clpDf]concat[clpCD];\
+  [clpAB][clpCD]concat[clpABCD];\
+  [0:v]trim=start=1876:duration=581,setpts=PTS-ARTPTS[clpE];\
+  [0:v]trim=start=2457:duration=24,setpts=PTS-STARTPTS[clpF];\
+  [clpF]vflip, hflip[clpFf];\
+  [clpE][clpFf]concat[clpEF];\
+  [0:v]trim=start=2481:duration=253,setpts=PTS-STARTPTS[clpG];\
+  [clpEF][clpG]concat[clpEFG];\
+  [clpABCD][clpEFG]concat[out1]" -map [out1]  -crf 14  -vcodec libx265  -vb 20M  a.mp4
+
+# reverse video + audio
+for f in f_*.mp4; do ffmpeg -i $f -vf reverse -af areverse $f_rev.mp4; done;
+
+========================================================================================
+==============================EXIF DATA=================================================
+========================================================================================
+========================================================================================
+
+#tesseract ocr text recognition
+for vids in *.mp4; do ffmpeg -sseof -1 -i "$vids" -vsync 0 -q:v 1 -update true "$vids".jpg; done
+convert -resize 1480% -monochrome -sharpen 0x30 a.jpg  1.png;
+tesseract 2.png out.txt --psm 8; cat out.txt.txt;
+
+# audio recognition 
+whisper --model large --language el --task transcribe *.mp4  --output_format srt 
+
+#Change EXIF title data in movie mkv files in BATCH
+for mkvfile in *.mkv; do     mkvpropedit "$mkvfile" -e info -s title="${mkvfile%.mkv}"; done;
+
+# remove / clear exif data in subfolders for video
+# CAUTION ON CORRUPTION - TAKE BACKUP
+# EDIT THE LATER FOLDER
+for f  in *; do  ffmpeg -i "$f" -map_metadata -1 -c:v copy -c:a copy "/home/user/Downloads/pics/_prx/_Greeks/web Greek 1/dd/""$f"; done
+
+# remove / clear exif data in subfolders for image in BULK
+#ADD A TAG TO CHECK ---  find . -name '*.jpg'  -exec   exiftool -Copyright="HAHAHAHAHHAHAHAHAHAHAHAHAHHA" *.jpg  {} +
+#REMOVE TAGS        ---  find . -name '*.jpeg'  -exec exiftool  -r -all=""  *.jpg *.jpeg *.JPG {} +
+#REMOVE TAGS        ---  find . -name '*.jpg'  -exec exiftool  -r -all=""  *.jpg *.jpeg *.JPG {} +
+#REMOVE TAGS        ---  find . -name '*.png'  -exec exiftool  -r -all=""  *.jpg *.jpeg *.png {} +
+#CHECK  TAGS        ---  find . -name '*.jpg' -exec exiftool  *.jpg *.jpeg *.JPG {} +
+# BEST
+exiftool -r -all= -ext jpg -ext JPG -ext jpeg -ext bmp -ext webp -ext gif -ext png "/media/eros/Events00/fixing/"
+exiftool -r -all= -ext mp4 -ext avi -ext ogg -ext mkv  -ext webm  "/media/eros/Events00/fixing/"
+
+
+# CAUTION - THIS DOES NOT CREATE_originalcopy
+-overwrite_original_in_place
+find  . \( -name "*.jpg*" -o -name "*.JPG*" -o -name "*.jpeg" -o -name "*.bmp" -o -name "*.webp" -o -name "*.gif" -o -name "*.png" \)   -exec   exiftool -Copyright="HAHAHAHAHHAHAHAH"-overwrite_original_in_place  *.jpg *.JPG *.jpeg *.bmp *.webp *.gif  *.png {} +
+find  . \( -name "*.jpg*" -o -name "*.JPG*" -o -name "*.jpeg" -o -name "*.bmp" -o -name "*.webp" -o -name "*.gif" -o -name "*.png" \)   -exec   exiftool  -r -all="" -overwrite_original_in_place *.jpg *.JPG *.jpeg *.bmp *.webp *.gif  *.png {} +
+
+# Find in bulk files and move them / copy them
+find "/mnt/HDD_MUSICVIDS/lamka1969/" -name  "*ΒΙΚΥ ΛΕΑΝΔΡΟΣ*"   -exec mv   '{}'   "/mnt/HDD_MUSICVIDS/__Videoclips/lamka1969/"   \;
+   
+# Find which videos/images are rotated (not 0) and copy them to a specific folder.
+mkdir rotates; 
+exiftool -filepath -Rotation -if '$Rotation ne "0"' *.mp4 | grep "File*." | sed "s/.*: /cp /g" | sed 's,$, '"$PWD"'/rotates\/;,g'
+
+# Find which videos/images are rotated (not 0) and change the value back to "0" (not rotated).  
+find . -name '*.mp4'  -exec  exiftool  -api largefilesupport=1 -Rotation="0" *.mp4  {} +
+
+========================================================================================
+==========================PICS TO PDFs==================================================
+========================================================================================
+gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE -dQUIET -dBATCH \
+-dDownsampleColorImages=true           -dDownsampleGrayImages=true                    -dDownsampleMonoImages=true \
+  -dColorImageResolution=110           -dGrayImageResolution=110                       -dMonoImageResolution=110 \
+  -dColorImageDownsampleThreshold=1.0 -dGrayImageDownsampleThreshold=1.0            -dMonoImageDownsampleThreshold=1.0 \
+-sOutputFile="/mnt/Basic_HDD/COPIES/SCANS/prx/dΗ Νταίζη ασχολείται με τα Αμοιβαία Κεφάλαια | Η Πρακτική των Αμοιβαίων κεφαλαίων - Πως θα τα αποκτήσει κάποιος.pdf" \
+"/mnt/Basic_HDD/COPIES/SCANS/prx/Η Νταίζη ασχολείται με τα Αμοιβαία Κεφάλαια | Η Πρακτική των Αμοιβαίων κεφαλαίων - Πως θα τα αποκτήσει κάποιος.pdf"
+
+
+# /Subsample, /Average, or /Bicubic (best)
+# dColorACSImageDict
+# GrayACSImageDict << 
+#   /ColorTransform 1 
+# /QFactor 0.9 /Blend 1 /HSamples [2 1 1 2] /VSamples [2 1 1 2] 
+# dJPEGQ=100
+
+
+RES=150; THRES=1.0; SUBS=/Bicubic
+gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH  -dSubsetFonts=true -dCompressFonts=true -dCompressMode=2 -dCompressEntireFile=true \
+-sProcessColorModel=DeviceRGB  -sColorConversionStrategy=sRGB  -sColorConversionStrategyForImages=sRGB \
+-dDownsampleColorImages=true           -dDownsampleGrayImages=true                    -dDownsampleMonoImages=true \
+  -dColorImageResolution=$RES           -dGrayImageResolution=$RES                     -dMonoImageResolution=$RES \
+   -dColorImageDownsampleType=$SUBS  -dGrayImageDownsampleType=$SUBS		   -dMonoImageDownsampleType=$SUBS      \
+    -dColorImageDownsampleThreshold=$THRES -dGrayImageDownsampleThreshold=$THRES          -dMonoImageDownsampleThreshold=$THRES \
+    -dDoThumbnails=false  -dCreateJobTicket=false  -dPreserveEPSInfo=false  -dPreserveOPIComments=false   -dPreserveOverprintSettings=false  -dUCRandBGInfo=/Remove \
+    -dAutoFilterColorImage=false \
+    -dPDFSETTINGS=/ebook \
+    -sOutputFile="/mnt/Basic_HDD/COPIES/SCANS/prx/150.pdf" \
+    -c '<</ColorACSImageDict << /Blend 1 /HSamples [1 1 1 1] /VSamples [1 1 1 1] /QFactor 0.08 /ColorTransform 1 >>  \
+       <</GrayACSImageDict << /Blend 1 /HSamples [1 1 1 1] /VSamples [1 1 1 1] /QFactor 0.08 /ColorTransform 1 >> setdistillerparams' \
+    -f "/mnt/Basic_HDD/COPIES/SCANS/prx/orig.pdf"
+    
+    # CONVERT images to PDF
+img2pdf *.webp -o output_img1.pdf
+img2pdf *.jpg --rotation=ifvalid -o output_img1.pdf
+
+convert "*.{png,jpg,webp}"   -limit memory 9000mb -limit disk 400gb   -quality 100 outfile.pdf
+convert "*.{png,jpg,webp}"   -quality 100 outfile.pdf
+
+find . -name '*.webp'  -exec mogrify -quality 100 -format  tiff  {} +
+convert "*.{tiff}"   -quality 100 outfile.pdf
+
+
+========================================================================================
+
+========================================================================================
+====================================   PICS  ===========================================
+========================================================================================
+
+
+# Keep Date on filename and add watermark in extra space - Add Modified Date as info on the Image, on the black padded space. 
+for pic in *.* ; do exiftool "-FileName<CreateDate" -d  "${pic//.*}_01SEP2020.jpg" "$pic"; done;
+
+#Save either the date of File Creation or Modification on filename
+for pic in *.* ; do 
+exiftool "-FileName<CreateDate" -d  "${pic//.*}_%Y %m %d_%H %M %S.jpg" "$pic"   &&   exiftool "-FileName<FileModifyDate" -d  "${pic//.*}_%Y %m %d_%H %M %S.jpg" "$pic" ; done;
+
+for pic in *.* ; do
+   # Determine offsets and sizes
+   read w y1 y2 y3 < <(identify -format "%w %[fx:w/50] %[fx:w/100] %[fx:w/200]" "$pic");
+    convert -size ${w}x${y1} xc:black -gravity SouthWest \
+      -pointsize ${y2} -fill white -undercolor '#00000080' -annotate +${y2}+${y3} "$pic" \
+      \( /home/user/downloads/watermark_0.png -resize "${y1}x${y1}^" \) -gravity East -composite \
+      "$pic" +swap -append "${pic//.*}-marked.jpg";
+done
+
+   # Convert images to another format
+for pic in *.bmp *.BMP; do convert  -units PixelsPerInch -density 300 -quality 100  "$pic" "${pic//}_j.jpg"; done
+for pic in *.tif *.TIF ; do convert  -units PixelsPerInch -density 300 -quality 100  "$pic" "${pic//}_j.jpg"; done
+for pic in *.png *.PNG; do convert  -units PixelsPerInch -density 300 -quality 100  "$pic" "${pic//}_j.jpg"; done
+convert '*.png' -set filename:fn '%[basename]' -units PixelsPerInch  -density 300 -quality 100 '%[filename:fn].jpg'
+convert '*.tif' -set filename:fn '%[basename]' -units PixelsPerInch  -density 300 -quality 100 '%[filename:fn].jpg'
+convert '*.png' -set filename:fn '%[basename]' -units PixelsPerInch  -density 300 -quality 100 '%[filename:fn].jpg'
+
+
+# Rotate images - 180o
+convert '*.jpg' -set filename:fn '%[basename]' -units PixelsPerInch  -rotate 180  -density 300 -quality 100 '%[filename:fn].jpg'
+# Anti-Clockwise roatation - LEFT
+convert '*.jpg' -set filename:fn '%[basename]' -units PixelsPerInch  -rotate -90  -density 300 -quality 100 '%[filename:fn].jpg'
+# Clockwise roatation - RIGHT
+convert '*.jpg' -set filename:fn '%[basename]' -units PixelsPerInch  -rotate 90  -density 300 -quality 100 '%[filename:fn].jpg'
+
+======= SOCIAL / BOOKS 
+
+ #-For Books BY Mobile     # Sharpen - Radius (only integers) 0x0.6
+# Anti-Clockwise roatation - LEFT
+for pic in *.jpg *.JPG; do convert -units PixelsPerInch  -rotate -90  -density 150 -quality 96  -resize 30%  -adaptive-sharpen  0x0.6 "$pic" "$pic" ;done
+for pic in *.jpg *.JPG; do convert -units PixelsPerInch   -density 150 -quality 96  -resize 30%  -adaptive-sharpen  0x0.6 "$pic" "$pic" ;done
+# Clockwise roatation - RIGHT 
+for pic in *.jpg *.JPG; do convert -units PixelsPerInch  -rotate 90  -density 150 -quality 96  -resize 30% -adaptive-sharpen    0x0.6 "$pic" "$pic";done
+# Rotate images - 180o
+for pic in *.jpg *.JPG; do convert -units PixelsPerInch  -rotate 180  -density 150 -quality 96  -resize 30% -adaptive-sharpen   0x0.6 "$pic" "$pic";done
+
+#-For Books BY Mobile    ΙΣΤΟΡΙΕΣ # Sharpen - Radius (only integers) 0x0.6
+for pic in 00*.jpg *.JPG; do convert -units PixelsPerInch   -density 150 -quality 96  -resize 60%  -adaptive-sharpen  0x0.6 "$pic" "$pic" ;done
+for pic in 00*.jpg *.JPG; do convert -units PixelsPerInch   -density 150 -quality 96  -resize 60%  "$pic" "$pic" ;done
+
+
+# creating smaller pics for social networks eg. facebook
+mkdir ok; for pic in *.jpg *.JPG; do convert -units PixelsPerInch   -quality 80  -resize 80% "$pic" ./ok/"$pic";done
+mkdir ok; for pic in *.webp; do convert -units PixelsPerInch   -quality 80  -resize 80% "$pic" ./ok/"$pic";done
+
+–sharpen  0x0.6
+# Sharpen - Radius (only integers)
+for pic in *.jpg; do  convert '*.jpg' -units PixelsPerInch -density 150 -quality 100 -adaptive-sharpen 0x0.6 "$pic" ./ok/"$pic";done
+convert '*.jpg' -set filename:fn '%[basename]' -units PixelsPerInch  -density 150 -quality 100 -adaptive-sharpen 0x0.6 '%[filename:fn]_j.jpg'
+convert '*.jpg' -set filename:fn '%[basename]' -units PixelsPerInch  -rotate 180  -density 300 -quality 100 '%[filename:fn].jpg'
+
+# SHARPEN, SATURATE, & increase BRIGHTNESS
+for pic in *.jpg;  do convert -modulate 120,130,100  -units PixelsPerInch -quality 100 -density 300 -adaptive-sharpen 0x0.2  "$pic" ./ok/"$pic";done
+
+# jpg to pdf
+img2pdf *.jpg --rotation=ifvalid -o output_img1.pdf
+
+======= CONVERT 
+
+# NOTE MOGRIFY 100% creates LOSSLESS images much bigger BUT convert creates smaller images than JPG. 
+ 
+# Convert bulk in SUBFOLDERS images to another format
+ find . -name '*.webp'  -exec mogrify -quality 100 -format  jpg "{}" +
+ find . -name '*.png'   -exec mogrify -resize 35%  -quality 100 -format  jpg "{}" +
+ find . -name '*.jpeg'  -exec mogrify -quality 100 -format  jpg *.jpeg "{}" +
+ find . -name '*.png'   -exec mogrify -density 150 -quality 100 -format  jpg "{}" + 
+ find . -iname "0*.jpg" -print0|xargs -I{} -0  mogrify -units PixelsPerInch   -density 150 -quality 96  -resize 60% -adaptive-sharpen 0x0.6  "{}"; 
+ find . -name '*.bmp'  -exec mogrify -quality 100 -format  webp  "{}" +
+ for f in *.JPG; do convert "$f" -quality 99  "${f%.*}.webp" ; done
+
+
+# convert images jpg png to animated gif
+convert -resize 0% -delay 40 Image*  animated.gif
+ffmpeg -i pg-%2d.jpg -framerate 400  -r 80 -pix_fmt bgr8  -vf super2xsai,scale=w=iw/3:h=ih/3  output.gif
+
+convert IMG_20220225_185920.jpg -resize 40%   -quality 100 IMG_20220225_185920a.jpg
+for szFile in *.jpg; do convert "$szFile" -resize 28%   -quality 100 "/mnt/aa/""$(basename "$szFile")" ; done;
+for szFile in *.jpg; do convert "$szFile" -resize 60%   -quality 100 /home/ff/"$(basename "$szFile")" ; done;
+for szFile in *.jpg; do convert "$szFile"  -quality 100 -rotate 90 /mnt/tmp/"$(basename "$szFile")" ; done;
+for szFile in *.jpg; do convert "$szFile"  -quality 100 -rotate -90 /mnt/tmp/"$(basename "$szFile")" ; done;
+
+# Create odd / even numbers of files
+num=2; for file in *.jpg; do    mv "$file" "$(printf "%04u" $num).jpg"; let num=num+2; done
+num=1; for file in *.jpg; do    mv "$file" "$(printf "%04u" $num).jpg"; let num=num+2; done
+# Create numbered pages 
+num=1; for file in *.jpg; do    mv "$file" "$(printf "%04u" $num).jpg"; let num=num+1; done
+
+
+======= RESIZE 
+
+# Resize
+@ Note: ~ is the original file 
+ mogrify * -resize 40% /home/prx/comics.php_files/ff/
+ mogrify * -resize 50% IMG_20220225_185622.jpg
+
+======= CROP
+ 
+# Crop - TOP
+for szFile in *.jpg; do convert "$szFile" -crop 100%x100%+0+200  -quality 100 /mnt/tmp/aa/"$(basename "$szFile")" ; done;
+# Crop - BOTTOM
+for szFile in *.jpg; do convert "$szFile" -crop 100%x85%+0+0  -quality 100 /mnt/tmp/"$(basename "$szFile")" ; done;
+
+
+
+======= RENAME FILES =====================
+# replace echo with eval to rename files
+for i in *.jpg; do echo "mv \"$i\" \"`echo "$i" | sed 's/\.\.[0-9]\+\+/\.\./g'`\""; done;
+
+for i in *.jpg; do eval "mv \"$i\" \"`echo "$i" | sed 's/\.\.[0-9a-zA-Z_]\+\+/\.\./g'`\""; done;
+
+==========================================
+
+	
+#for flickr cases - keeps only first string
+rename "s/^/flickr_/" *.jpg; for i in *.jpg; do mv $i flickr_`echo $i|cut -d"_" -f2`.jpg; done;
+
+find . -name '*.jpg' -execdir rename -n   's:./:./flickr_:' {} +;
+find . -name "*.jpg" -exec rename -n 's/(flickr)_([0-9]*)_([0-9a-z]*)_([a-z0-9]*)/flickr_\2/' {} ";"
+
+# find if files in one directory recursively exists in another directory recursively in linux bash
+pth1="/mnt/PICS/a/";
+pth2="/mnt/PICS/b/";
+meld <(find "${pth1}"/ -exec basename {} \; | grep "jpg$" | sort | uniq )  <(find "${pth2}"/ -exec basename {} \; | grep "jpg$" | sort | uniq )
+
+(find "${pth1}"/ -exec basename {} \; | grep "jpg$" | sort | uniq )  > a.txt; cat a.txt;
+(find "${pth2}"/ -exec basename {} \; | grep "jpg$" | sort | uniq )  > b.txt; cat b.txt;
+
+=========================================================
+
+# Add a string at the beginning of each file recursively in all sub directories.
+for file in *.jpg; do mv -v ${file} image_${file}; done
+find . -name '*.jpg' -execdir rename  -n 's:./:./image_:' {} +;
+
+# rename a string in middle of filenames recursively in subdirectories defining groups 
+find . -name "*.jpg" -exec rename  's/(flickr)_([0-9]*)_([0-9a-z]*)_([a-z0-9]*)/flickr_\2/' {} ";"
+
+# rename first to second aaaa_111.jpg becomes --> 111_aaaa.jpg
+rename  's/([^_]+)_([^_]+)\.jpg$/$2_$1.jpg/' *_*.jpg
+
+for f in "9convert.com -"*; do mv --  "$f" "a${f%*}"; done
+mmv "9convert.com - "\* \#1
+
+find "/home/prx/" -name  "*webp*"   -exec mv   '{}'   "/home/prx/"   \; rm -rf smile*; 
+find "/home/prx/" -name  "*png*"   -exec mv   '{}'   "/home/prx/"   \; rm -rf smile*; 
+
+# find a specific file and rename it 
+find . -iname "0001.jpg" -exec rename 's/0001.jpg/a0001.jpg/' '{}' \;
+find . -iname "a0001.jpg" -exec rename 's/a0001.jpg/0001.jpg/' '{}' \;
+
+find . -name '*.webp'  -exec mogrify -quality 100 -format  tiff *.webp {} +
+convert "*.{tiff}"   -quality 100 outfile.pdf
+
+======= MONTAGE
+
+# merge / join photos horizontaly or verticaly / images in a 2x2 2*2 grid / frame.
+montage *.jpg -tile 2x2 -geometry +1+1  -quality 100 rollers_.jpg
+montage v_04678.bmp v_04773.bmp v_04938.bmp v_05380.bmp -tile 2x2 -geometry +1+1  -quality 100 scr_003.jpg
+montage aa_	1	.jpg aa_	2	.jpg aa_	3	.jpg aa_	4	.jpg -tile 2x2 -geometry +1+1  -quality 100 screenshot	1	.jpg
+montage -auto-orient *.jpg *.JPG -tile 2x2 -geometry +1+1  -quality 100 karnavali_artemida_2023_2x2_w.jpg
+
+num=0;  for file in *.jpg; do  
+let nm=num+1; let num=num+2;
+montage "$(printf "%04u" $nm).jpg" "$(printf "%04u" $num).jpg" -tile 1x2 -geometry +0+0  -quality 100 roll$num.jpg
+done
+
+# merge / join photos horizontaly or verticaly / images in a 4*1 4x1 grid / frame.
+montage aa_001.jpg aa_002.jpg aa_003.jpg aa_004.jpg -tile 4x1 -geometry +1+1  -quality 100 screenshot1.jpg
+montage aa_	1	.jpg aa_	2	.jpg aa_	3	.jpg aa_	4	.jpg -tile 4x1 -geometry +1+1  -quality 100 screenshot	1	.jpg
+
+Find a specific file name and list only directories
+find . -type f -name 'tiki-300x300.jpg~' | sed -r 's|/[^/]+$||'
+
+if grep -q "avi demux error" \
+    <(cvlc --vout null --aout null --stop-time 2 "${VIDFILE}" vlc://quit 2>&1 )
+    # alternate ways to stop after two seconds
+    #<(timeout 2 cvlc --vout null --aout null "${VIDFILE}" 2>&1)
+    #<(cvlc --vout null --aout null "${VIDFILE}"  2>&1 & sleep 2; kill $!)
+then
+    echo "avi demux error: ${VIDFILE}"
+    exit 1
+fi
+================================================================================================
+# get framerate / framecount per video onscreen
+# Take screenshot, take frame, extract frame
+vid_scr="output.mp4"; mpv --ao=alsa --osd-msg1='${estimated-frame-number} / ${estimated-frame-count}' "${vid_scr}"
+
+
+# When FRM are INCORRECT to ffmpeg extract 2, 3 or 4 frames before to correct
+cp frm.txt frm_cp.txt;
+cp frm.txt fm.txt;
+awk '{ print $1-1; }' fm.txt > fm1.txt; awk '{ print $1-2; }' fm.txt > fm2.txt;
+awk '{ print $1-3; }' fm.txt > fm3.txt; awk '{ print $1-4; }' fm.txt > fm4.txt;
+paste -d'\n' fm4.txt fm3.txt fm2.txt fm1.txt fm.txt > frm.txt;
+
+# Save frame number in a file one below other.
+# Adds eq(n\, #adds )+ at the end of each line #remove + in lastline (last digit)
+sed -i 's/^/eq(n\\,/' frm.txt; sed -i 's/$/)\+/'  frm.txt; sed -i '$ s/.$//' frm.txt;  frms=$(cat frm.txt); 
+
+# Extract frames based on FRM.TXT
+mkdir frames;
+frms=$(cat frm.txt); ffmpeg -rtbufsize 100M -vf "select='$frms'" -fps_mode passthrough -frame_pts true frames/"${vid_scr}_%5d.bmp" -i "${vid_scr}"
+======================================================================================================
+#smplayer repeat 
+--loop-file=inf
+======================================================================================================
+# Extract All frames based on timestamp ONLY
+mkdir frames; ffmpeg -i vid.mp4" -strftime 1  frames/"%Y-%m-%d_%H-%M-%S.bmp"
+
+# Make video from images jpg png bmp
+ffmpeg -framerate 5 -pattern_type glob -i '*.png'  -c:v libx264 -pix_fmt yuv420p out.mp4
+ffmpeg  -i img2022_%03d.jpg -c:v libx265 -vf  'scale=1024:768'  -pix_fmt yuv420p  -crf 16 output1.mp4
+ffmpeg -framerate 25 -pattern_type glob -i '*.JPG'    -c:v libx265  -x265-params  crf=18  -pix_fmt yuvj420p out.mp4
+
+#convert to high quality jpg
+for pic in *.bmp; do convert  -units PixelsPerInch -density 300 -quality 100  "$pic" "${pic//}.jpg"; done;
+rename "s/.bmp//g" *.jpg;
+
+# add filename as title under image
+img2pdf *.jpg --rotation=ifvalid -o output_img1.pdf
+for pic in * ; do 
+  montage -label '%f' $pic -font Arial -pointsize 30 -geometry +0+0 -background silver "${pic//}_j.jpg"; done
+rename "s/.jpg_j//" *
+================================================================================================
+=================================== LINUX BASH COMMANDS ==================================================
+=================================================================================================
+useful linux commands
+
+==========================================
+# convert milisecongs to time
+ams=169920;
+asecs=$(( ams   / 1000 ));
+amins=$(( asecs / 60 ));
+ahours=$(( amins / 60 ));
+adays=$(( ahours / 24 ));
+dasecs=$(( ams   % 1000 ));
+dmins=$(( asecs % 60 ));
+dhours=$(( amins % 60 ));
+ddays=$(( ahours % 24 ));
+durtime="$adays $ddays $dhours $dmins $dasecs";
+
+printf "%02d:%02d:%02d:%02d.%03d\n" $durtime
+
+milli-seconds-to-time(){
+    local milliseconds=$1 seconds minutes hours
+    (( seconds=milliseconds / 1000 ))
+    (( minutes=seconds / 60 ))
+    (( hours=minutes / 60 ))
+    printf "%02d:%02d:%02d.%03d\n" $hours $((minutes % 60)) $((seconds % 60))\
+        $((milliseconds % 1000))
+}
+
+milli-seconds-to-time $1
+milli-seconds-to-time 169920
+====================================================================================================================================================
+# compare the time of audio with that of video when you extract audio
+find . -exec ffmpeg -i   {} -c:a libmp3lame  -qscale:a 0  {}.mp3 \;
+
+find -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.flac" -o -iname "*.wav" -o -iname "*.wma" -o -iname "*.ogg" > fls_mp3.txt;
+while read -r LINE; do militotime.sh $(mediainfo --Inform="Audio;%Duration%" "$LINE" | sed "s/\.000000//g"); done < fls_mp3.txt > tm1.txt;  
+paste -d" " fls_mp3.txt tm1.txt | sort > tm1_all.txt;
+find -iname "*.webm" -o -iname "*.mkv" -o -iname "*.avi" -o -iname "*.mp4"  > fls_vids.txt;
+while read -r LINE; do militotime.sh $(mediainfo --Inform="Audio;%Duration%" "$LINE" | sed "s/\.000000//g"); done < fls_vids.txt > tm2.txt;
+paste -d" " fls_vids.txt tm2.txt | sort > tm2_all.txt;
+meld tm1_all.txt tm2_all.txt; cat tm1_all.txt | wc -l;
+
+cat fls_vids.txt | wc -l;
+while IFS= read -r file ; do rename "s/\.webm|\.mkv|\.mp4//g"  -- "$file" ; done < fls_mp3.txt;
+while IFS= read -r file ; do gtrash put  -- "$file" ; done < fls_vids.txt;
+gtrash put fls_mp3.txt tm1.txt tm1_all.txt fls_vids.txt tm2.txt tm2_all.txt;
+====================================================================================================================================================
+# search recursively in folders for files
+for file in ./**; do echo "${file}"; done
+
+# watch write/read resources
+iostat -x 1
+iostat -d 10 /dev/sda
+sudo fatrace -c -f W 
+
+#Change temporary folder tmp 
+sudo rmdir /tmp && ln -s /mnt/Basic_HDD/tmp_linux/ /tmp
+export TEMP=/mnt/Basic_HDD/tmp_linux/;
+export TMPDIR=/mnt/Basic_HDD/tmp_linux/;
+export TMP=/mnt/Basic_HDD/tmp_linux/;
+TMPDIR=/mnt/Basic_HDD/tmp_linux/ sudo hugin &
+
+Change permissions / ownership to user (in all files inside folder)
+sudo chown -R user:user Games
+
+# Find zero byte files in directories 
+# add --delete to remove them
+find . -type f -size 0 
+find . -type f -empty -print -delete
+========================================================================================
+=================wget===============================================================
+========================================================================================
+
+watch 'free -m | awk '\''{if (NR == 2) {print $7}}'\''; nvidia-smi | awk '\''{if (NR == 9) {print $13}}'\''; sensors | awk '\''{if (NR>=15&&NR<=20) {print $2}}'\'
+========================================================================================
+download in mass tumblr 
+wget -H -k -p -R "*avatar*" -A '.jpeg,.jpg,.bmp,.gif,.png' -np -nd -N -erobots=off https://henyamania.tumblr.com/page/251/
+wget --user myemail@yahoo.com --password T^2020000  -H -k -p -R "*avatar*" -A '.jpeg,.jpg,.bmp,.gif,.png' -np -nd -N -erobots=off https://alivelypack.tumblr.com/page/2/
+========================================================================================
+wGET only IMAGE LINKS
+lynx --dump -nonumbers    https://boomba.club/158-skinny-women-with-big-tits.html | grep jpg > links.sh 
+========================================================================================
+
+# download per directory images given a text file with urls
+ wget -4 -e robots=off -H  -nc -np  --recursive -p  --level=1 --accept jpg,jpeg  --reject svg,png -i b.txt
+
+# Allow to follow external links to specific domains e.g. blogspot.com
+wget   -4 \
+      --span-hosts \
+      --no-clobber \
+      --recursive \
+      --page-requisites \
+      --html-extension \
+      --no-parent \
+      --user-agent="Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0" \
+      https://www.nudismlife.com/ 
+
+wget   --mirror  --page-requisites    --html-extension    --convert-links   -c https://saltymindss.com/
+saltymindss
+
+# Rip Entire website
+wget -r   --mirror   --page-requisites --convert-links --span-hosts --domains egotoagrimi.files.wordpress.com,egotoagrimi.wordpress.com   http://egotoagrimi.wordpress.com
+wget --random-wait  --limit-rate=120K  -k -r -m -np  http://www.erotikes-istories.com/index.php/erotikes-istories -o erotikes-istorie.txt
+wget --random-wait  --limit-rate=120K -r -nc -p -U Mozilla http://www.erotikes-istories.com/index.php/erotikes-istories -o erotikes-istorie.txt
+*-nc -prevents this behavior, instead causing the original version to be preserved and any newer copies on the server to be ignored.
+
+### ripped sites with options
+wget -4 -e robots=off   --referer https://www.depop.com/ --span-hosts   --no-clobber  --recursive   --page-requisites    --html-extension  --no-parent --random-wait  --limit-rate=520K --user-agent="Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0"  --load-cookies cookies.txt   --header="Accept: */*" https://www.depop.com
+wget --random-wait  --limit-rate=30K -r -N -p -U Mozilla  http://erotikes-istories.com  -o erotikes-istorie.txt
+wget   --mirror  --page-requisites    --html-extension    --convert-links   -c   http://erotikes-istories.com  -o erotikes-istorie.txt
+wget   --mirror  --page-requisites    --html-extension    --convert-links   -c https://athensescorts.gr
+wget -r   --mirror   --page-requisites --convert-links --span-hosts --domains egotoagrimi.files.wordpress.com,egotoagrimi.wordpress.com   http://egotoagrimi.wordpress.com
+wget  --user eromelodios --password panagia3   --tries=100 --timeout=120  --dns-timeout=120 --connect-timeout=120  --read-timeout=120  --limit-rate=1000K  --no-check-certificate --span-hosts --no-clobber --recursive --page-requisites   --html-extension  --no-parent  --user-agent="Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"    https://www.nudismlife.com/
+
+###########################################################################################################################################
+### rip sites
+jadedldn
+www.diver.com.gr
+athensescorts.gr
+??αρτεμιδα σεξυ μαγιό;
+koursaros.net
+
+# square.com
+wget -r -e robots=off    --user-agent="Mozilla/5.0 (X11; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0"   --mirror   --page-requisites  --convert-links --span-hosts --domains square.gr  https://www.square.gr/
+
+
+===============
+##### Generate sequential number and join two strings. 
+num=0; 
+while [ $num -le 181 ]; do num=$((num+1)) && echo "https://www.flickr.com/photos/c0gnate/page"$num;  done;
+=============================================
+# to copy linux system / root into another already formatted linux system disk
+# mount to other point to not copy recursive folders or devs procs etc.
+sudo mount --bind / /mnt/src_cp ;
+
+#exclude --- DONT WORK
+tar --verbose  -C /mnt/src_cp  --exclude="/mnt/src_cp/mnt"  -c . > /mnt/tmp_ssd/source-fs.tar
+
+#Extract data to the destination
+pv < source-fs.tar | tar  --verbose  -C ~/dest -x
+
+#to list tar files
+tar -tf /mnt/tmp_ssd/source-fs.tar
+
+# to remove a directory from tar archive
+/usr/bin/tar -v --delete --no-wildcards -f '/mnt/tmp_ssd/source-fs.tar' -- './home/user/Pictures/'
+
+# url: https://nikvdp.com/post/cloning-a-linux-install/
+=============================================
+# remove hidden files / delete hidden recursively
+# delete all temp files
+find -type f -name ".*" -delete;
+find -type f -name "*.temp" -delete;
+============================================
+# merge multiple files line under line - Merge files line by line
+# 135 246 --> 123456
+paste -d'\n' f.txt f1.txt f2.txt
+============================================
+# how to tar and untar files
+tar -cvf file.tar folder/
+# extract
+tar -xf file.tar -C path/
+============================================
+#find all hidden files and subfolders recursively
+find . -name '.*'
+============================================
+# while read
+while IFS='' read -r LINE || [ -n "${LINE}"  ]; do 
+============================================
+#### list only filenames in all subfolders
+find . -type f -printf "%f\n" | grep jpg > info.txt 
+=============================================
+### Take usb hdd device number, and hard serial number and mount point in one line. 
+### Prints a simple tree in sd* (last word) sort order
+sdparm -i /dev/sd[a-z] | grep -e dev -e specific  | paste - -
+tree -i /dev/disk/by-partlabel/ | sort -k3 | grep "-"
+=============================================
+# find the encoding of characters in bash
+find . -type f -exec file --mime-encoding {} \; | grep -v 'utf-8'
+=============================================
+# run a temporary server  for sharing a directory
+python3 -m http.server --directory 
+=============================================
+# determining the microcode
+cpuid | grep "processor serial number =" | head -n1 | sed 's/.* = //;s/-0000.*//;s/-//'
+=============================================
+# find duplicate files based on checksum m 
+
+#1st way - compares only the 1st megabyte of data
+find -type f -size +3M -print0 | while IFS= read -r -d '' i; do
+  echo -n '.'
+ # if grep -q "$i" md5-partial.txt; then
+ #   echo -n ':'; #-e "\n$i  ---- Already counted, skipping.";
+ #   continue;
+ # fi
+  MD5=`dd bs=1M count=1 if="$i" status=none | md5sum`
+  MD5=`echo $MD5 | cut -d' ' -f1`
+  if grep "$MD5" md5-partial.txt; then echo -e "Duplicate: $i"; fi
+  echo $MD5 $i >> md5-partial.txt
+done
+fi
+
+#2nd way - compares full size
+#find duplicated files / search similar files / find same videos / find duplicated videos
+#find similar videos
+find . -not -empty -type f -printf "%s\n" | sort -rn | uniq -d |\
+xargs -I{} -n1 find . -type f -size {}c -print0 | xargs -0 md5sum |\
+sort | uniq -w32 --all-repeated=separate > dupls.txt
+
+#3nd way - USING LIST OF FILES - SAFER - md5 & SIZE
+#remove apostrophs
+rename "s/'//g" *;
+tree -i -L1 --dirsfirst  > files_all.txt;
+rhash --md5 -p '%h||%p\n'  --file-list=files_all.txt > files_rhash.txt;
+cat files_all.txt | xargs -I "{}" stat --printf='%s||%n\n' --  "{}" > file_size.txt;
+geany files_rhash.txt file_size.txt;
+cat files_rhash.txt | sed "s/.*|//g" > a.txt;
+cat file_size.txt | sed "s/.*|//g" > b.txt;
+meld a.txt b.txt;
+paste files_rhash.txt file_size.txt > file_join.txt;
+geany file_join.txt;
+cat file_join.txt| sort -hr -k1,32 | uniq -w32 --all-repeated=separate > dupls.txt;
+cat dupls.txt | uniq  -w32 -d > trash_files.txt;
+cat trash_files.txt | wc -l;
+cat trash_files.txt | sed "s/.*|//g" | xargs -I "{}" gtrash put -- "{}"
+
+
+#4rd way - jdupes
+=============================================
+# find duplicate files in subfolders subdirectories 
+rdfind  -ignoreempty true -removeidentinode false -makeresultsfile true   -deleteduplicates  false -dryrun true .
+
+#BETTER / only for YOUTUBE with IDS  --- #GREP duplicates with path "TOPIC" to move to temporar dir PH
+# WARNING  - IF EMPTY ALL FILES SELECTED
+# WARNING TOPIC must be flat folder
+afile="$(ls * | sort -f | uniq -i -d | grep -e "webm" -e mp4 | grep -oh "\[.*\]" | sed "s/\[//" | sed "s/\]//")";
+bfile="$(echo  "$afile" | while read f; do find . -iname  "*"$f"*" | grep "TOPIC"; done)";
+echo  "$bfile" | while read f; do echo  mv "$f" '{}' ./TM; done; 
+
+=============================================
+#### print only unique entries in a file.txt
+sort _lipu.txt | uniq -u
+=============================================
+### auto scroll down for Firefox
+while true; do xvkbd -window Firefox -text "\[Page_Up]\[Page_Down]\[Page_Down]\[Page_Down]"; sleep 2; done;
+=============================================
+### Move all files from subfolders to parent directory 
+find . -mindepth 2 -type f -print -exec mv {} . \;
+=============================================
+### Back up and restore Games and Game Saves from Android device using adb
+### Backup WHILE RUNNING THE APP 
+/etc/udev/rules.d/51-android.rules.   --ID from lsusb
+`  SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="2005", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"  `
+sudo chmod a+r /etc/udev/rules.d/51-android.rules
+
+# MAKE USER -- ABOUT phone - USB DEBBUGING ON
+adb kill-server; adb start-server;
+sudo udevadm control --reload-rules;
+## connect / reconnect cable
+sudo usermod -a -G plugdev eros
+
+
+#### LIST
+adb shell pm list packages -f -3
+#list disabled apps
+adb shell pm list packages -d
+adb devices;
+adb shell service list;
+
+
+##### SAVE
+# back up all data 
+adb -s 3093SH2010020461 backup -f all -all -apk -nosystem
+# SAVE EACH APK to its OWN
+for APP in $(adb -s 3093SH2010020461 shell pm list packages -3 -f)
+do  adb -s 3093SH2010020461 pull $( echo ${APP} | sed "s/^package://" | sed "s/base.apk=/base.apk /").apk; done;
+### OR adb shell 'bu backup -apk -all -nosystem' > backup.adb
+
+# SAVE EACH APK DATA to its OWN
+for APP in $(adb -s 3093SH2010020461 shell pm list packages -3)
+do APP=$( echo ${APP} | sed "s/^package://");  adb -s 3093SH2010020461 backup -f ${APP}.backup ${APP} ; done
+
+# save single apk
+adb backup -f backup.ab -apk eu.alamot.matchsticks_full
+adb pull /data/app/org.fedorahosted.freeotp-Rbf2NWw6F-SqSKD7fZ_voQ==/base.apk freeotp.apk
+adb restore awaken.ing.ab
+
+# UNPACK 
+java -jar abe-62310d4.jar  unpack all.ab all.tar;
+tar -ixvf all.tar 
+
+
+##### RESTORE
+# FIRST install apk
+adb install application.apk
+# then DATA
+adb restore application.backup
+### OR adb shell 'bu restore' < backup.adb
+
+#### UNINSTALL 
+adb shell pm uninstall --user 0 non.wanted.app
+# list packages
+
+=============================================
+# updates initframs
+sudo update-initramfs -k all -u.
+=============================================
+# trunctuate large log files
+sudo truncate -s 1MB /var/log/syslog
+sudo truncate -s 1MB /home/user/.xsession-errors
+sudo journalctl --flush --rotate --vacuum-time=30d or 1s
+ 
+dbus-monitor "interface=org.gtk.vfs.MountTracker,member=MountLocation"
+
+# sudo find /var/log -type f -delete -regex ".*\.gz$"
+# sudo find /var/log -type f -delete -regex ".*\.[0-9]$"
+
+# KEEP THE FILES BUT ZERO THEM
+sudo find /var/log/ -type f -exec cp /dev/null {} \; 
+=============================================
+error on automake
+sudo apt -y install --reinstall \
+  autoconf-archive \
+  libcmocka0 \
+  libcmocka-dev \
+  build-essential \
+  git \
+  pkg-config \
+  gcc \
+  g++ \
+  m4 \
+  libtool \
+  automake \
+  autoconf
+
+sudo libtoolize --force
+sudo aclocal
+autoheader
+automake --force-missing --add-missing
+		// autoreconf --install
+autoconf
+# dpkg-query -L libglib2.0-dev | grep m4
+# grep -r AM_SILENT_RULES /usr/share/*
+sudo cp /usr/share/aclocal-1.16/* /usr/local/share/aclocal/
+=============================================
+# increase sound volume from bash
+patl set-sink-volume  "$(pactl list sinks | grep -oe alsa_output.*|head -n1)" 300% 
+=============================================
+# update grub
+sudo grub-mkconfig -o /etc/grub2.cfg;
+sudo grub-mkconfig -o /etc/grub2-efi.cfg;
+
+# update grub on other disk
+sudo update-grub  /dev/sdb2
+
+#where grup is installed? in what disks grub is located
+sudo fdisk -l 2>/dev/null | egrep "Disk /|/dev/" | sed "s#^/dev/#Part /dev/#" | awk '{print $2}' | sed 's/://' | xargs -n1 -IX sudo sh -c "hexdump -v -s 0x80 -n  2 -e '2/1 \"%x\" \"\\n\"' X | xargs -n1 -IY sh -c \"case  \"Y\" in '48b4') echo X: GRUB 2 v1.96 ;; 'aa75' | '5272') echo X: GRUB Legacy ;; '7c3c') echo X: GRUB 2 v1.97 oder v1.98 ;; '020') echo X: GRUB 2 v1.99 ;; *) echo X: Kein GRUB Y ;; esac\"" 
+
+=============================================
+# check/repair vfat disks
+sudo dosfsck -w -r -l -a -v -t /dev/sdb1
+=============================================
+#Samba file edit
+sudo nano /etc/samba/smb.conf
+sudo groupadd staff
+
+# test samba 
+testparm /etc/samba/smb.conf
+
+sudo service smbd restart;
+sudo systemctl restart smbd;
+sudo systemctl enable smbd.service ;
+# sudo smbpasswd -a <use>
+
+=============================================
+wget for internet archive 
+
+# only some files
+wget -r -H -nc -np -nH --cut-dirs=1 -A .pdf,.epub -e robots=off -l1 -i ./internetarchive_indentifiers.txt -B 'http://archive.org/download/'
+
+# all files
+wget -r -H -nc -np -nH --cut-dirs=1 -e robots=off -l1 -i ./internetarchive_indentifiers.txt -B 'http://archive.org/download/'
+
+=============================================
+# apparmor="DENIED" profile
+sudo aa-complain thunderbird
+sudo aa-complain cups-browsed
+=============================================
+# Network related files
+  
+# Edit internet related files
+sudo medit /etc/hosts 
+sudo medit /etc/hostname
+sudo medit /etc/network/interfaces
+sudo medit /etc/sysctl.conf 
+# cat /proc/sys/net/ipv6/conf/enp3s0/accept_dad
+
+# Check if network interfaces work
+sudo ifup --no-act enp3s0;
+sudo ifup -a -v;
+
+# Restart network services
+sudo /etc/init.d/networking restart;
+sudo /etc/init.d/networking stop;
+sudo /etc/init.d/networking start;
+
+sudo ip link set enp3s0 up;
+sudo service systemd-networkd start ;
+sudo service systemd-networkd status;
+
+sudo systemctl status networking;
+sudo systemctl status NetworkManager;
+sudo systemctl status systemd-hostnamed.service;
+
+sudo systemctl restart networking;
+sudo systemctl restart NetworkManager;
+sudo systemctl restart systemd-hostnamed.service;
+sudo systemctl restart fwupd.service ifplugd.service ifupdown-pre.service ifupdown-wait-online.service iio-sensor-proxy.service irqbalance.service ModemManager.service networkd-dispatcher.service networking.service NetworkManager-dispatcher.service NetworkManager.service network-online.target nftables.service sshd.service ssh.service ssh.socket systemd-networkd.service systemd-networkd.socket systemd-network-generator.service
+=============================================
+#usbview or  lsusb -D /dev/bus/usb/003/016
+# device infoarmation
+# lsof /dev/bus/usb/003/016 --list of processes that slaves files
+udevadm control --reload
+lsusb -D /dev/bus/usb/003/014 
+=============================================
+# check here a library is find locate .so files
+ldconfig -p | grep
+=============================================
+label and serial number and device id 
+ lsblk --output NAME,MOUNTPOINT,SIZE,FSTYPE,UUID,ROTA,MODEL
+ lsblk -fs
+=============================================
+# overwrite deb packages file
+sudo apt-get -o Dpkg::Options::="--force-overwrite" install
+=============================================
+# if file browsers fail
+libgtk-3-common
+=============================================
+# reset monitor, reset display
+xrandr --output  HDMI-A-0 --mode 1920x1080 
+xrandr --output  HDMI-A-0 --mode 1280x1024
+xrandr --output  HDMI-A-0 --mode 1024x768 (princeofpersia)
+xrandr --output  HDMI-A-0 --mode 800x600
+=============================================
+# sort urls or sort filenames according to last field AND keep UNIQUES.
+delim=/;new_delim=" ";cat ll.txt | sed "s|\(.*\)$delim|\1$new_delim|" | sort -t"$new_delim" -k 2,2 -u | sed "s|$new_delim|$delim|"
+=============================================
+# priont just filenames in bash
+for filename in $(ls); do  echo $filename; done;
+=============================================
+# Make / create / copy only non existing folders / directories, not files
+find -type d -exec mkdir -p "/mnt/PICS_Social00/Flickr/gallery-dl/flickr/ghpartypics/___/Albums/{}" \; 
+
+# Compare only directories / folders between two paths 
+diff -rq /path/to/dir1 /path/to/dir2
+
+# Compare only directories / folders between two paths - report the number of files recursevuly for each folder
+find . -mindepth 1 -type d -print0 | while IFS= read -r -d '' i ; do echo -n $i": " ; ls -p "$i" | grep -v / | wc -l ; done
+=============================================
+#find files bigger than in all subfolders subdirectories
+find . -type f -size +200M
+=============================================
+=============================================
+#change hostname in linux
+sudo sysctl -w kernel.hostname=eros;
+sudo nano /etc/sysctl.conf 
+sudo sysctl --system -p
+=============================================
+# QT variables
+export DESKTOP_SESSION=ubuntu
+export QT_QPA_PLATFORMTHEME=GTK+
+export QStandardPaths=/home/user/qt_temp
+export XDG_RUNTIME_DIR=/home/user/qt_temp
+export QT_STYLE_OVERRIDE=GTK+
+
+export QT_PLUGIN_PATH=/home/user/qt_temp
+export QT_PKG_CONFIG=true
+
+
+sudo visudo
+Defaults        env_keep += "XDG_RUNTIME_DIR"
+
+QT_STYLE_OVERRIDE=GTK+
+echo "export QT_STYLE_OVERRIDE=GTK+" >> ~/.profile
+
+Qt 5.6.2 lists: ("Windows", "GTK+", "Fusion")
+Qt 5.9.0 lists: ("Windows", "Fusion")
+============================================= 
+
+# firewall rules
+# rOUTER^20220
+sudo ufw allow from 192.168.0.0/16 to any app Samba
+
+sudo ufw enable;
+sudo ufw disable;
+
+sudo ufw allow from 192.168.0.0/16 to any app Samba
+sudo ufw delete allow from 192.168.1.0/16  to any port 53;
+sudo ufw delete allow from 192.168.1.0/16  to any port 88;
+sudo ufw delete allow from 192.168.1.0/16  to any port 389;
+sudo ufw delete allow from 192.168.1.0/16  to any port 464;
+# ports=135/tcp||||636/tcp|3268/tcp|3269/tcp|49152:65535/tcp
+
+To establish PUBLIC FTP:
+LAN Host:           192.168.2.3
+WAN Port            20 to 21
+LAN Host Port     20 to 21
+then connect with real ip plus port.
+
+=============================================
+# Disaple usb autosuspend
+# sudo medit /etc/udev/rules.d/50-usb_power_save.rules
+ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="-1"
+# restart udev rules without restart
+sudo  udevadm control --reload-rules && sudo udevadm trigger
+# info on usb power rules
+cat /sys/bus/usb/devices/*/power/control
+
+OR echo "on" > "/sys/bus/usb/devices/usbX/power/autosuspend"
+OR echo on > /sys/bus/usb/devices/usb1/power/level  
+or sudo powertop
+=============================================
+# find files on bad blocks / reallocation on hard disk.
+# Prints the registered bad blocks of the filesystem: 
+dumpe2fs -b /dev/sda[x]
+
+# Prints the inodes which use the given block list:
+debugfs -R "icheck BLOCK ..." /dev/sda[x]
+
+# Prints the pathnames to the given inode list: 
+debugfs -R "ncheck INODE ..." /dev/sda[x]
+
+# Return block size
+tune2fs -l /dev/sdf1 | grep Block
+OR  badblocks -b 4096 /dev/sda[x]
+
+# print inode number of a specific file
+ls -i  file_corrupted.jpg
+
+# --> https://wiki.archlinux.org/title/Identify_damaged_files
+
+parted - align-check opt partition-number
+# recover super block
+sudo btrfs rescue super-recover -v /dev/xxx
+
+# info on a mounted disk
+dumpe2fs /dev/sdb1
+
+# delete journal on a disk 
+tune2fs -O ^has_journal /dev/sdxy
+# build a new journal on a disk
+# tune2fs -j /dev/sdxy
+
+# copy gpt table info
+sudo sfdisk -d /dev/sdb > /home/user/Data/PT_sdb_xxx.txt
+# fix gpt table 
+sudo gdisk /dev/sdb1
+
+ddrescue -v  file_to_rescue.jpg file_saved_trimed.jpg
+=============================================
+# Creating torrent file in bash terminal
+py3createtorrent -t best20  "/mnt/MVIDS/Australian_Commercials_IA/"
+=============================================
+#setting language to linux from terminal
+gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'us'), ('xkb', 'el')]"
+USE ibus-setup
+=============================================
+# Audio enable / pusleaudio / alsa
+pactl load-module module-detect
+pactl load-module module-alsa-sink
+-journalctl -xe --user-unit pulseaudio
+systemctl --user restart pulseaudio
+
+See journal per loglevel and from last date to previous
+journalctl -p 3 -xb
+=============================================
+ # fonts renew 
+ fc-cache -f -v
+ =============================================
+# list only files without folders
+ls *  -aRp --sort=size | sort --dictionary-order  
+=============================================
+# systemd analyze services, boot time, boot lag.
+systemd-analyze critical-chain
+systemd-analyze blame
+pstree
+ps -ax -o pid,start,comm #when a process started
+(unmask)
+sudo systemctl mask NetworkManager-wait-online.service #if this lag the system
+sudo systemctl disable NetworkManager-wait-online.service ;
+sudo systemctl disable nmbd.service;
+sudo systemctl disable ModemManager.service;
+sudo systemctl disable plymouth-quit-wait.service;
+sudo systemctl disable exim4.service;
+#dns servers name servers dhcp.conf too
+resolv.conf 
+
+
+=================================================================================================
+cat /home/eros/.config/lxqt/lxqt.conf 
+/home/eros/.config/lxqt/session.conf 
+/home/eros/.config/lxqt/lxqt-config-input.conf 
+/home/eros/.config/lxqt/session.conf
+
+/usr/share/lxqt/lxqt.conf
+/usr/share/lxqt/session.conf
+
+/etc/xdg/lxqt/session.conf
+/etc/xdg/lxqt/lxqt.conf
+=================================================================================================
+=================================== yt-dlp BASH COMMANDS ========================================
+=================================================================================================
+# how to download from tiktok
+yt-dlp  -o "%(title).70s-%(id)s.%(ext)s" --write-comments  --restrict-filenames --trim-filenames 70  
+yt-dlp  -o "%(title).70s-%(id)s.%(ext)s"  --restrict-filenames --trim-filenames 70    https://www.tiktok.com/music/My-humpsgreekparody-6861871374114360066
+
+# how to download from tiktok
+yt-dlp --write-info-json  -o "%(upload_date>%Y-%m-%d)s_%(id)s_%(title).70s.%(ext)s"  --restrict-filenames --trim-filenames 70 -a l.txt 
+
+=================================================================================================
+
+yt-dlp  --username oauth2 --password '' --check-formats  --retries 1000 --fragment-retries 20 --retry-sleep 120  --cookies-from-browser firefox:/mnt/tmp_ssd/firefox_tmp/default_mine/ --limit-rate 800k --write-description --download-archive archive.txt -o "%(playlist)s/%(title)s_[%(id)s].%(ext)s" https://www.youtube.com/@GreekTV/playlists
+
+https://forums.newsbin.com/viewtopic.php?f=7&t=47732
+iperf -c 192.168.2.1 -r -d  -w 14000 -u -b 900m -P 20 -m -t 30000
+
+--match-filter "title*=ΟΛΑ" ???
+
+ https://www.youtube.com/c/kittenizator/videos
+yt-dlp  -ciw -o "%(title)s.%(ext)s" -v --write-info-json "ytsearch600:Реклама" https://www.youtube.com/user/MrRetromemories/videos
+Реклама https://www.youtube.com/c/kittenizator/videos
+yt-dlp  -ciw -o "%(title)s.%(ext)s" -v --write-info-json "ytsearch2000:ΔΙΑΦΗΜΙΣΗ" https://www.youtube.com/user/MrRetromemories/videos
+
+#To limit download rate and download many chuncks of files - quicker download. 
+yt-dlp -vU --limit-rate 500K --downloader aria2c -N 5 --write-info-json  --cookies-from-browser firefox   
+
+yt-dlp  --limit-rate 1M --cookies-from-browser firefox --check-formats --socket-timeout 120 --retries 40  https://www.youtube.com/@UlibinArt/videos
+
+yt-dlp -vU --limit-rate 1M --downloader aria2c -N 5 --write-info-json  --cookies-from-browser firefox    https://vk.com/video/@club107646916?z=video-107646916_456274801%2Fpl_-107646916_-2 -o "Perdiendo mi virginidad ( 2019 )".mp4
+
+yt-dlp -v --cookies cookies.txt --extractor-args --write-info-json  "youtube:player-client=all;include_duplicate_formats" --list-formats https://www.youtube.com/watch?v=b5A8Zy6tgcg  
+
+# using cookies
+yt-dlp  --cookies-from-browser firefox https://www.youtube.com/@dozenminds/videos
+
+# use cookies from specific firefox profile or from cookie file
+yt-dlp   https://www.youtube.com/watch?v=b5A8Zy6tgcg --write-info-json --cookies-from-browser  firefox:/home/user/.mozilla/firefox/jafshm4s.default-esr-2
+yt-dlp   https://www.youtube.com/watch?v=b5A8Zy6tgcg --write-info-json  --cookies cookies.txt
+
+# To download videos from youtube according to a search string
+yt-dlp  --write-info-json --cookies-from-browser firefox gvsearch200:Cicciolina
+
+# SEARCH INSIDE CHANNELS VIDEOS
+yt-dlp --playlist-end 350 "https://www.youtube.com/@greektvportal3945/search?query=παζάρι"
+
+# if no Video tab, then take url and then append to it "/videos". or /user/dior/videos/
+workaround: 
+get the channel_url from one of the channel's videos
+yt-dlp -O channel_url "https://www.youtube.com/watch?v=MPj6xeG6pQk"
+https://www.youtube.com/channel/UC6xD-jKli-_qIYXDTsNv4dw
+then you can append /videos to it:
+yt-dlp "https://www.youtube.com/channel/UC6xD-jKli-_qIYXDTsNv4dw/videos"
+or https://www.youtube.com/user/dior/videos but may not. 
+
+yt-dlp -O channel_url  
+/usr/local/bin/yt-dlp  --write-pages    https://www.youtube.com/channel/UCAKrklCnc6QVbkSEIUREwbA/videos
+/usr/local/bin/yt-dlp  --write-pages    https://www.youtube.com/@AmstelGreece/videos
+/usr/local/bin/yt-dlp  --cookies cookies2.txt https://www.youtube.com/channel/UCAKrklCnc6QVbkSEIUREwbA/videos
+Ana Angelica Hernandez Caroline McMullen Melissa SolShine
+
+
+#dragon's den download
+https://antennavod.akamaized.net/VODS2/50a325d5-dbca-4a32-ab18-4b4427535856.mp4
+
+
+# for HLS streaming video
+yt-dlp --referer https://www.ertflix.gr/en/epg/audition/prg.565140-ept1-live-4017670  --add-header "Accept: */*" --hls-prefer-native --no-part --downloader ffmpeg --hls-use-mpegts  " https://cbd537474fbad4634b64787657ff6456.msvdn.net/ert1/ert_ev1_main/mainabr/ert_ev1_main/main_1080/chunks_dvr.m3u8"
+
+yt-dlp --referer https://ww1.m4uhd.cc/watch-movie-transformations-1988-11113.html  --add-header "Accept: */*" --hls-prefer-native --no-part --downloader ffmpeg --hls-use-mpegts https://tmstr2.luminousstreamhaven.com/stream_new/H4sIAAAAAAAAAw3J226DIAAA0F_iok3do1G0WnDKxcobio4Z6ZLWZtSv387rQXA.GTAuJzRG5zgxAMeLOZ8SEyUxXKD9kPLyHg9GupsODJLrXMowAFLNcgBDD8KUdWHE1bfJEz74JzIkFa3co77Y3Eiq3ZCfyMhKX5F.dmtacL5TjmBDiTOzUFEL4qPPdfx_TKxdZ3rYTETXPJsiDq2b7hbPvntxYd8UbC91SzFbVa2yPO7LbmAHBSxXYvLbhR_kYeXXr_H7awTEUR87saVAQrsqzO60dJ.UWKzlFsS2PZiofCNcqT1zDLHr5FmjhAwa7bXwDE8Fi1psEc9aQFEI7XuvKVa872HBCl3qAyR_MU7nckEBAAA-/index-2.m3u8
+
+yt-dlp --referer https://denisegrowthwide.com/4e134db5-bd0e-4f17-ad42-90b137ef7af0  --add-header "Accept: */*" --hls-prefer-native --no-part --downloader ffmpeg --hls-use-mpegts  "https://denisegrowthwide.com/4e134db5-bd0e-4f17-ad42-90b137ef7af0"
+
+yt-dlp --referer https://beeg.com/-01787680597  --add-header "Accept: */*" --hls-prefer-native --no-part --downloader ffmpeg --hls-use-mpegts  "123689195_480p.m3u8"
+
+https://www.ert.gr/webtv/ert/tv/live-glm/ert1.html
+
+yt-dlp  "https://player.glomex.com/2aff0c1c-dd6a-4cc9-b29b-e74e57b292ed"  --add-header "Accept: */*" --hls-prefer-native --no-part --downloader ffmpeg --hls-use-mpegts  "/home/user/Downloads/stream.m3u8"
+
+# Downloading videos into playlists
+yt-dlp  --cookies-from-browser firefox --limit-rate 800k --write-description --embed-thumbnail --embed-metadata --download-archive archive.txt -o "%(uploader)s/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" "https://www.youtube.com/@n4lyssa/playlists"
+
+# Downloading videos that are not in playlists
+yt-dlp --cookies-from-browser firefox --limit-rate 800k --write-description --embed-thumbnail --embed-metadata --download-archive archive2.txt -o "%(uploader)s/Loose Videos/%(title)s.%(ext)s" "https://www.youtube.com/c/ntk/videos"
+
+#get file sizes
+yt-dlp https://www.youtube.com/playlist?list=PLQKyTXVHxaRPE3AkpcDxkTMZuimKXhGmq  --quiet --skip-download --exec-before-download 'size=$(numfmt --to=iec-i --suffix=B --format="%.2f" $(( %(requested_formats.0.filesize+requested_formats.1.filesize|0)d + %(filesize|0)d ))); echo "Size: $size"' > a.txt
+
+many threads?
+# time exceeded breakpoint/trace
+sudo ss -x src "*/tmp/.X11-unix/*" | grep -Eo "[0-9]+\s*$" | while read port; do sudo ss -p -x | grep -w $port | grep -v X11-unix ; done | grep -Eo '".+"' | sort | uniq -c | sort -rn
+
+
+====================================================================================
+=====================gallery-dl======================================================
+=====================================================================================
+ gallery-dl https://twitter.com/anastasiashows -o skip=true
+ gallery-dl -v --retries -1 --sleep 2-3.2  --limit-rate 400K  --download-archive archive2.log --cookies-from-browser firefox -a yf.txt;
+=====================================================================================
+### DRY RUN RSYNC to check if files are copied are same in NAME & SIZE
+rsync --dry-run --size-only --recursive --verbose .  "PATH2" | more
+
+# copy files /backup files / clone hard disk / from one disk to another
+rsync -avxHAWX --info=progress2 /mnt/Shows1/ /mnt/Shows2/  --log-file=shows00.log
+
+# copy files /backup files / clone hard disk / from one disk to another - 
+# if in local are added to remote / if removed from local are removed from remote / files added in remote are removed
+# files removed from remote are restored from local if they exist, else ignored
+# a=archive, v=verbose, h=human readable numbers, n=dry run, H=preserve hard links, A=preserve ACLs, w=whole file, X=preserve attr,
+# "-S" WARNING about use it or not? 
+# -S rsync -avhxHAWX --delete --info=progress2 /mnt/VIDS/ /mnt/VIDS0_bckp/  --log-file=/home/user/Data/Disk_backup_info/xvids00_20aug.log
+
+# ONLY DELETE (~~~~two commands!!!) at destination FIRST
+a) rsync -v --dry-run --human-readable --ignore-errors -r --delete-before --stats  --progress --ignore-existing --existing /mnt/Games00//media/user/HDD_GAMES/ --log-file=/home/user/Data/Disk_backup_info/shows_22dec_2023_del.log;
+b) rsync -vv -r --links --perms --times --atimes --open-noatime  --group --owner --hard-links --acls --xattrs --executability    --whole-file   --stats --human-readable --progress /mnt/XXX_VIDS_00/ /mnt/XXX_VIDS_00_bckp/ --log-file=/home/user/Data/Disk_backup_info/xxx_vids_25nov_2023.log;
+
+rsync -avxHAWX  --partial   --info=progress2   "/mnt/HDD_Shows/__YT_Channels/__Greek/oasvos/diafora/ΚΑΡΥΤΑΙΝΑ - ΤΙ ΘΑ ΕΒΛΕΠΕΣ ΑΝ ΜΠΟΡΟΥΣΕΣ ΝΑ ΠΕΤΑΞΕΙΣ [6bWZgzEtKT0].webm"  "/mnt/Shows00_bcp/__YT_Channels/__Greek/oasvos/diafora/ΚΑΡΥΤΑΙΝΑ - ΤΙ ΘΑ ΕΒΛΕΠΕΣ ΑΝ ΜΠΟΡΟΥΣΕΣ ΝΑ ΠΕΤΑΞΕΙΣ [6bWZgzEtKT0].webm" --log-file=shows01.log
+
+# COPY 
+cp --verbose --no-clobber  --preserve=mode,ownership,timestamps --recursive  /mnt/Games00/__Games/*  /media/user/HDD_GAMES/
+
+# if hdd is corrupted
+dd if="/mnt/HDD_Shows/__YT_Channels/__Greek/oasvos/diafora/ΚΑΡΥΤΑΙΝΑ - ΤΙ ΘΑ ΕΒΛΕΠΕΣ ΑΝ ΜΠΟΡΟΥΣΕΣ ΝΑ ΠΕΤΑΞΕΙΣ [6bWZgzEtKT0].webm" of="/mnt/Shows00_bcp/__YT_Channels/__Greek/oasvos/diafora/ΚΑΡΥΤΑΙΝΑ - ΤΙ ΘΑ ΕΒΛΕΠΕΣ ΑΝ ΜΠΟΡΟΥΣΕΣ ΝΑ ΠΕΤΑΞΕΙΣ [6bWZgzEtKT0].webm" bs=1k conv=noerror,sync
+
+============================================================================================
+EFKA - ΕΦΚΑ https://apps.ika.gr/eInsuranceStatement/faces/secureAll/showInsReport.xhtml
+==============================================================================================
+# if problem with kio worker - search
+dbus-launch dolphin
+===============================================================
+#running thunderbird 
+chrt -o 0  thunderbird
+MOZ_LOG="Widget:5" WAYLAND_DEBUG=1 LIBGL_ALWAYS_SOFTWARE=1  tiktok-playwright celiakaramolegou
+sudo apparmor_parser -R /etc/apparmor.d/usr.bin.evince
+sudo apparmor_parser -R /etc/apparmor.d/usr.bin.thunderbird
+==================================================================================================
+# Chromium for running itch / iogames CRC errors.
+chromium --user-data-dir="/mnt/Projects/home/eros/Downloads/browser/" --disable-web-security --disable-site-isolation-trials
+==================================================================================================
+# copy largest / biggest image files to a safe folder
+# SELECT bigget file of type "aaaa_0000.webp"
+ 
+# list all files
+tree -i | sed "s/_[0-9]*.webp//g" | sed "s/.webp//g" | sort -u >  tree.txt;
+
+# largest or unique files select 
+while read -r LINE; do find . | grep  "$LINE"  | xargs -I "{}" stat --printf='%s|%n\n' --  "{}" | sort -hr | head -n1;   done < tree.txt | sed "s/[0-9]*|\.\///g" | sort -hr > bighead.txt;
+
+# copy to safe place all unique or biggest files 
+mkdir safe; while IFS= read -r file ; do cp -- "$file" ./safe/; done < bighead.txt;
+
+==================================================================================================
+# find duplicate images
+findimagedupes  -v=fp  -R -f=fp_data   -t 70% .
+==================================================================================================
+# PRX - CAUTION TRY IT - save the largest one to copy it in a folder named SAFE
+#rename reculsively subfolders
+
+# CAUTION '*' instead of \*.* RENAME FOLDERS too
+*.jpg, *.jpeg, *.png
+find -iname '*' | rename -v "s/\)|\(|'|\"|\`|¨| |\?|\=/_/g"
+# add suffix .jpg to filenames of ".jpg_numbers_etc"
+find . -type f  \( -name "*.jpg_*" -o -name "*.jpeg_**" \)  -execdir rename  's/$/.jpg/' {} +;
+find . -type f  \( -name "*.png_*" \)  -execdir rename  's/$/.png/' {} +;
+
+# find similar images 
+findimagedupes -R -t 92% .  > files.txt;
+#for wordpress sites "$ \r\n"
+findimagedupes -R -t 100% .  > files.txt;
+
+
+# CAUTION "sed works on "jpg, jpeg, gif, png, webp files"
+while read -r LINE; do echo "$LINE" | sed "s/\.jpg /\.jpg\n/g" | sed "s/\.gif /\.gif\n/g" | sed "s/\.jpeg /\.jpeg\n/g" | sed "s/\.png /\.png\n/g" | sed "s/\.webp /\.webp\n/g" | xargs -I "{}" stat --printf='%s|%n\n' --  "{}" | sort -hr | head -n1;  done < files.txt  > LARGEST.txt;
+
+# all files produced
+while read -r LINE; do echo "$LINE" | sed "s/\.jpg /\.jpg\n/g" | sed "s/\.gif /\.gif\n/g" | sed "s/\.jpeg /\.jpeg\n/g" | sed "s/\.png /\.png\n/g" | sed "s/\.webp /\.webp\n/g" | xargs -I "{}" stat --printf='%s|%n\n' --  "{}";  done < files.txt  > allfiles.txt;
+
+# some cleaning
+sed "s/.*|//g" LARGEST.txt > onlyLARG_files.txt;
+sed "s/.*|//g" allfiles.txt > allfiles_ok.txt;
+# when FULL path is given - PLEASE PUT SAFE PLACE OUTSIDE
+mkdir safe; while IFS= read -r file ; do cp -- "$file" ./safe/; done < onlyLARG_files.txt;
+
+# WITHOUT COPYING IN SAFE PLACE 
+# remove from del list LARGEST ones - insert ok_del.txt to del command
+sort onlyLARG_files.txt > sort_lg.txt;
+sort allfiles_ok.txt > sort_all.txt;
+comm -2 -3 sort_all.txt sort_lg.txt > ok_del.txt;
+cp ok_del.txt old_ok_del.txt;
+
+#BEFORE DEL them, you may check them visually
+mkdir compares;
+num=1; while read -r line ; do montage -mode concatenate -tile 1x $line ./compares/"$(printf "%04u" $num).jpg" ;let num=num+1;  done <  files.txt;
+
+# Then, AFTER VISUAL SELECTION, del lines that you want NOT like to be removed.
+ls -A1  ./compares/ | sed "s/.jpg//g" > numbers.txt
+while read -r line; do  sed "${line}q;d" files.txt  ;  done < numbers.txt >noremovedlines.txt;
+cat  noremovedlines.txt | sed "s/ /\n/g" > noremfiles.txt;
+cat  old_files.txt | sed "s/ /\n/g" > oldremfile.txt;
+cp files.txt old_files.txt;
+comm -2 -3 <(sort old_files.txt) <(sort noremovedlines.txt) > files.txt;
+cat  files.txt | sed "s/ /\n/g" > newremfile.txt;
+cat  ok_del.txt | sed "s/ /\n/g" > okdel_rem.txt;
+cat  old_ok_del.txt | sed "s/ /\n/g" > oldokdel_rem.txt;
+# FINAL CHECK
+meld <(sort noremfiles.txt) <(sort ok_del.txt) 
+
+
+# when copied in a safe place THEN delete them ALL
+while IFS= read -r file ; do gtrash put -- "$file"  ; done <  ok_del.txt;
+================================================================================================
+#remove spaces and parenthesis in files
+rename "s/ /_/" *; rename "s/\(/_/" *; rename "s/\)/_/" *;
+
+================================================================================================
+ia download many urls
+for line in $(cat ll.txt); do ia download "$line"; done
+for line in $(cat ll.txt); do ia download --glob="*.mp4|*.mkv|*.txt|*.vtt" "$line"; done;
+for line in $(cat hasbro.txt); do ia download "$line"; done
+==================================================================================================
+# untar 
+tar -xv -C /mnt/xPICS00/333/ -f    333.tar
+==================================================================================================
+tiktok (only profile) 
+python3 tiktok.py celiakaramolegou --browser chrome
+===================================================================================================
+# Download facebook fb videos public 
+# save complete page with singlefile
+# then grep and replace &amp
+grep -oh "https:\/\/scontent.f[-_0-9a-zA-Z.\/]\+\+?[%-;&=-_0-9a-zA-Z.\/]\+\+"  nemesis.html | grep mp4  > vids.txt
+sed -i "s,\&amp;,\&,g" vids.txt 
+wget - vids.txt
+===================================================================================================
+# python3 - how to upgrade 
+pip pip3 ////  install --break-system-packages --user
+python3 -m pip  install -U -I --no-deps --no-cache-dir --break-system-packages --user https://github.com/mikf/gallery-dl/archive/master.tar.gz
+pip3 install --break-system-packages --user vsco-dl
+python3 -m pip  install -U -I - --break-system-packages --user instaloader
+=======================================================================================================================================
+pipreqs .
+pip install  --break-system-packages --user -r requirements.txt
+---------------------------------------------------------------------
+installing requirement creating virtual environment
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install  requirements.txt
+
+pip3 install  --break-system-packages --user l -r requirements.txt
+pip3 install --force-reinstall --upgrade  --no-deps --break-system-packages --user PyQt6
+=======================================================================================================================================
+Superblock backups stored on blocks:
+list="32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968, 102400000, 214990848, 512000000, 550731776, 644972544" IFS=","; for i in $list; do e2fsck -b $i /dev/sdb; done
+
+mkfs.ext4 -S /dev/sdb
+e2fsck -f -b 98304 /dev/sdb1
+mount -o sb=98304 /dev/sdb1 /mnt/data1
+dumpe2fs -g  /dev/sdb1 
+https://www.cyberciti.biz/faq/wp-comments-post.php
+
+An ext4 superblock typically starts 1K into the partition. Within the superblock, it contains the string 0xef53 at an offset of 0x38.
+
+# get magic number 
+# with od
+sudo od -x /dev/sdb1 | awk '$6 == "ef53"'
+# with hexdump
+dd if=/dev/sdb1 bs=4k count=4k |hexdump -C |head -n1000
+# with hd
+hd /dev/sdb1 | grep " [0-9a-f][0-9a-f]  53 ef" | sed -e 's/^/    /' | head
+=======================================================================================================================================
+# info about usb devices / ports
+lsusb -v 2>/dev/null | grep '^Bus\|iSerial'
+lspci | grep -i usb
+=======================================================================================================================================
+# for slow speeds consider usb cache disable 
+# https://marc.merlins.org/perso/linux/post_2018-12-20_Getting-Around-USB3-xhci-32-Device-Limit-_Max-number-of-devices-this-xHCI-host-supports-is-32_.html
+# If you would like to do the settings manually, one example is as follows for your reference:
+# manually all usb v3 to usb v2
+# to setting back, e.g. setpci -H1 -d 8086:8c31 d0.l=1  # 0=for ehpi and 1 for xhci
+# lspci -nn | grep USB
+# set hdparm cache off
+
+00:14.0 USB controller [0c03]: Intel Corporation 8 Series/C220 Series Chipset Family USB xHCI [8086:8c31] (rev 05)
+00:1a.0 USB controller [0c03]: Intel Corporation 8 Series/C220 Series Chipset Family USB EHCI #2 [8086:8c2d] (rev 05)
+00:1d.0 USB controller [0c03]: Intel Corporation 8 Series/C220 Series Chipset Family USB EHCI #1 [8086:8c26] (rev 05)
+
+# sudo setpci -H1 -d 8086:8c31 d0.l=0; sudo setpci -H1 -d 8086:8c2d d0.l=0; sudo setpci -H1 -d 8086:8c26 d0.l=0
+=======================================================================================================================================
+# differences in files 
+dira="/mnt/XXX_VIDS_00/_X_Realities/";
+dirb="/mnt/XXX_VIDS_00_bckp/_X_Realities/";
+diff -u  <(cd "$dira" && du -ab | sort -k2) <(cd "$dirb" && du -ab | sort -k2) | grep -E "^\+"
+?comm -3
+diff --changed-group-format='%<' --unchanged-group-format=''    <(cd "$dira" && du -ab | sort -k2) <(cd "$dirb" && du -ab | sort -k2)
+
+cd dir1
+find . -type f -printf "%p %s\n" | sort > ~/dir1.txt
+cd dir2
+find . -type f -printf "%p %s\n" | sort > ~/dir2.txt
+diff ~/dir1.txt ~/dir2.txt
+du -b | sort -d
+=======================================================================================================================================
+# bookmarks
+# For manga / japan content
+https://sukebei.nyaa.si/view/2459168
+
+@ Insta profiles
+Jessica Kahawaty
+vicky-varga
+Natasha Kay
+Emily Ratajkowski
+haleyamelia__
+belle.delphine
+
+@ripsites
+https://thefappeningtop.com/
+
+pinterest
+https://www.pinterest.se/pin/848224911054712677/
+
+bad sector
+https://forum.cgsecurity.org/phpBB3/viewtopic.php?t=5961
+
+vscoGR
+gallery-dl   --write-infojson      --write-metadata     --write-tags
+vscoEN
+e2fsck -y -f -C 0 -t -t
+
+#depop
+https://github.com/mcdamo/tab-image-saver/issues/87
+Not an issue with this addon. Use the ${alt} rule or include an ${index} number and you might get some unique names.
+
+
+DOWNLOADING AT videoclips/majorettes/dancekpt
+DOWNLOADING AT videoclips/russian/majorettes-dance
+(maj-dances) yt-dlp --write-description https://www.youtube.com/@majorettes-dance/videos
+(dancekpt) yt-dlp --write-description https://www.youtube.com/@dancekpt/videos
+https://www.facebook.com/pages/Ippokampaki/202393566477856/photos/
+
+
+===============================================================
+=====================  wine  ===============================
+===============================================================
+sudo dpkg --add-architecture i386
+sudo apt install libgl1:i386
+WINEPREFIX="$HOME/.wine64" WINEARCH=win64 ddr=opengl renderer=gl wine CampPinewood.exe 
+WINEPREFIX="$HOME/.wine32" WINEARCH=win32 ddr=opengl renderer=gl wine setup.exe
+===============================================================
+japan games
+
+export LOCPATH=$HOME/.wine32/locale-ja/;
+mkdir -p $LOCPATH;
+localedef -f EUC-JP -i ja_JP $LOCPATH/ja_JP.EUC-JP;
+localedef -c -f SHIFT_JIS -i ja_JP $LOCPATH/ja_JP.SJIS;
+cd "/home/eros/Data/jp/Japan VisualNovels Tools/Anex86/";
+env WINEPREFIX="$HOME/.wine32" WINEARCH=win32  LANG=ja_JP.SJIS wine anex86.exe;
+dialect;
+cd ~/Downloads/_linux/Game2Text/;
+python game2text.py;
+
+
+env WINEPREFIX="$HOME/.wine64" WINEARCH=win64  LANG=ja_JP.SJIS wine anex86.exe;
+env WINEPREFIX="$HOME/.wine64" WINEARCH=win64LANG=ru_RU.utf8 wine
+
+===============================================================
+
+UPS that has a 12V battery with a capacity of 2.9 AH and 300 watts
+A = Wt / V. Here, 270 W / 12V = 22.5 A.
+2.9 AH / 22.5 A = 0.1288*60 = 7.70 = 0.70/*60 = 0.48 ===7 minutes 44 seconds.
+
+MEGETHOS SYSTEM: 
+27GB except home/tmp/mnts + 45 GB HOME + 20GB MEDIAs = 100GB    - Downl = 1.6T
+100GB x 12m = 1.2T x 2 = 2T. x10 =20χρόνια/2=10χρόνια.
+
+===============================================================
+
+
+
