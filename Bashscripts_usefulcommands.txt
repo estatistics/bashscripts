@@ -1104,10 +1104,10 @@ resolv.conf
 
 
 =================================================================================================
-cat /home/eros/.config/lxqt/lxqt.conf 
-/home/eros/.config/lxqt/session.conf 
-/home/eros/.config/lxqt/lxqt-config-input.conf 
-/home/eros/.config/lxqt/session.conf
+cat /home/user/.config/lxqt/lxqt.conf
+/home/user/.config/lxqt/session.conf
+/home/user/.config/lxqt/lxqt-config-input.conf
+/home/user/.config/lxqt/session.conf
 
 /usr/share/lxqt/lxqt.conf
 /usr/share/lxqt/session.conf
@@ -1251,7 +1251,7 @@ sudo apparmor_parser -R /etc/apparmor.d/usr.bin.evince
 sudo apparmor_parser -R /etc/apparmor.d/usr.bin.thunderbird
 ==================================================================================================
 # Chromium for running itch / iogames CRC errors.
-chromium --user-data-dir="/mnt/Projects/home/eros/Downloads/browser/" --disable-web-security --disable-site-isolation-trials
+chromium --user-data-dir="/mnt/Projects/home/user/Downloads/browser/" --disable-web-security --disable-site-isolation-trials
 ==================================================================================================
 # copy largest / biggest image files to a safe folder
 # SELECT bigget file of type "aaaa_0000.webp"
@@ -1415,43 +1415,6 @@ find . -type f -printf "%p %s\n" | sort > ~/dir2.txt
 diff ~/dir1.txt ~/dir2.txt
 du -b | sort -d
 =======================================================================================================================================
-# bookmarks
-# For manga / japan content
-https://sukebei.nyaa.si/view/2459168
-
-@ Insta profiles
-Jessica Kahawaty
-vicky-varga
-Natasha Kay
-Emily Ratajkowski
-haleyamelia__
-belle.delphine
-
-@ripsites
-https://thefappeningtop.com/
-
-pinterest
-https://www.pinterest.se/pin/848224911054712677/
-
-bad sector
-https://forum.cgsecurity.org/phpBB3/viewtopic.php?t=5961
-
-vscoGR
-gallery-dl   --write-infojson      --write-metadata     --write-tags
-vscoEN
-e2fsck -y -f -C 0 -t -t
-
-#depop
-https://github.com/mcdamo/tab-image-saver/issues/87
-Not an issue with this addon. Use the ${alt} rule or include an ${index} number and you might get some unique names.
-
-
-DOWNLOADING AT videoclips/majorettes/dancekpt
-DOWNLOADING AT videoclips/russian/majorettes-dance
-(maj-dances) yt-dlp --write-description https://www.youtube.com/@majorettes-dance/videos
-(dancekpt) yt-dlp --write-description https://www.youtube.com/@dancekpt/videos
-https://www.facebook.com/pages/Ippokampaki/202393566477856/photos/
-
 
 ===============================================================
 =====================  wine  ===============================
@@ -1467,7 +1430,7 @@ export LOCPATH=$HOME/.wine32/locale-ja/;
 mkdir -p $LOCPATH;
 localedef -f EUC-JP -i ja_JP $LOCPATH/ja_JP.EUC-JP;
 localedef -c -f SHIFT_JIS -i ja_JP $LOCPATH/ja_JP.SJIS;
-cd "/home/eros/Data/jp/Japan VisualNovels Tools/Anex86/";
+cd "/home/user/Data/jp/Japan VisualNovels Tools/Anex86/";
 env WINEPREFIX="$HOME/.wine32" WINEARCH=win32  LANG=ja_JP.SJIS wine anex86.exe;
 dialect;
 cd ~/Downloads/_linux/Game2Text/;
