@@ -7,7 +7,7 @@ Bashscript file contains usefull bashcommands collected over time eg. :
   - manipulating video like joining, cutting, merging etc.
     - ffmpeg 
   - manipulating system information
-  - optimizing system (eg. truncuatinglog files)
+  - optimizing system (eg. truncuating log files), usb energy optimization
   - find revursively in folder and subfolders
   - grepping text in strings, long strings, in texts, in files
   - sed lines
