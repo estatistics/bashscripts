@@ -31,4 +31,10 @@ A high-performance Bash script designed to batch-convert MKV files into H.265 (H
   - TIME_VID	Set to 0 for the Full Movie. Set to a number (e.g., 60) to encode only the first X seconds for a quality test.	1200 (20 mins)
   - BITRATE	Target video bitrate in kbps.	4000 (4Mbps)
 
+🖥️ How it Works
+-    FPS Detection: Uses ffprobe to find the exact frame rate of the source.
+-    Video Encoding: GStreamer pulls the raw video, converts the colorspace, and pipes it into the AMD hardware encoder.
+-    Audio & Muxing: FFmpeg takes the new video stream, encodes the original audio to Opus, ensures 5.1 channel mapping is correct, and combines them into a final .mkv file.
 
+📈 Performance
+- On an AMD RX 5700 XT, this script typically processes 1080p video at 3x-5x real-time speed. To reach 100% GPU utilization (ENC), it is recommended to run two instances of the script in parallel.
