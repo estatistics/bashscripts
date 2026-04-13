@@ -3,11 +3,16 @@
 - Downloading Streamings
 - Debian terminal comamnds
 - HDD / SDD commands
-- Image Manipulation / process
-- Audio manipulation / process
-- Video manipulation / process
-- Renaming in Bulk
+- Image Manipulation / process (montage, cropping, adjusting, color correction)
+- Audio manipulation / process (highres audio, louder audio, ripping audio)
+- Video manipulation / process (color correction, resolution higher/lower, cropping, transforming, encoding, decocind)
 - Changing exif data in bulk
-- PDF manipulations / process
-- Bulk file operations recursively
-- Bulk folder operations recursively
+- PDF manipulations / process 
+- Bulk file operations recursively (renaming, moving, copying)
+- Bulk folder operations recursively (renaming, moving, copying)
+- Text files manipulations (sed / awk commands)
+- wget / yt-dlp commands
+- adb commands
+- system health check
+- monitor commands
+- wine commands
