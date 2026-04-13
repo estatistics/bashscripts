@@ -16,3 +16,19 @@
 - system health check
 - monitor commands
 - wine commands
+
+# gstream encoding/decoding script
+AMD VA-API H.265/Opus Transcoder
+
+A high-performance Bash script designed to batch-convert MKV files into H.265 (HEVC) using AMD hardware acceleration (VA-API). This script utilizes GStreamer for ultra-efficient video encoding and FFmpeg for professional-grade audio processing and container muxing.
+🚀 Features
+-    Dual-Engine Pipeline: Uses GStreamer's vaapih265enc for video and FFmpeg's libopus for audio.
+-    Hardware Accelerated: Offloads video encoding to the AMD VCN (Video Core Next) engine, keeping CPU usage low and speed high.
+-    Smart Clipping: Toggle between encoding a full video or a specific duration for testing.
+-    High-Fidelity Audio: Encodes audio into 512k Opus with support for 5.1 surround sound mapping.
+-    Automatic Cleanup: Removes temporary video-only files after successful muxing.
+- VARS:
+  - TIME_VID	Set to 0 for the Full Movie. Set to a number (e.g., 60) to encode only the first X seconds for a quality test.	1200 (20 mins)
+  - BITRATE	Target video bitrate in kbps.	4000 (4Mbps)
+
+
