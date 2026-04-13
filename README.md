@@ -1,7 +1,13 @@
 # Useful bashscript commands for 
-## Editing videos
-## Downloading Streamings
-## Debian terminal comamnds
-## HDD / SDD commands
-## Image Manipulation / process
-## Audio manipulation / process
+- Editing videos
+- Downloading Streamings
+- Debian terminal comamnds
+- HDD / SDD commands
+- Image Manipulation / process
+- Audio manipulation / process
+- Video manipulation / process
+- Renaming in Bulk
+- Changing exif data in bulk
+- PDF manipulations / process
+- Bulk file operations recursively
+- Bulk folder operations recursively
