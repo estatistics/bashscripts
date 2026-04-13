@@ -1708,22 +1708,6 @@ du -b | sort -d
 # For manga / japan content
 https://sukebei.nyaa.si/view/2459168
 
-@ Insta profiles
-Jessica Kahawaty
-vicky-varga
-Natasha Kay
-Emily Ratajkowski
-haleyamelia__
-belle.delphine
-
-@ripsites
-https://thefappeningtop.com/
-
-pinterest
-https://www.pinterest.se/pin/848224911054712677/
-
-bad sector
-https://forum.cgsecurity.org/phpBB3/viewtopic.php?t=5961
 
 vscoGR
 gallery-dl   --write-infojson      --write-metadata     --write-tags
@@ -1733,13 +1717,6 @@ e2fsck -y -f -C 0 -t -t
 #depop
 https://github.com/mcdamo/tab-image-saver/issues/87
 Not an issue with this addon. Use the ${alt} rule or include an ${index} number and you might get some unique names.
-
-
-DOWNLOADING AT videoclips/majorettes/dancekpt
-DOWNLOADING AT videoclips/russian/majorettes-dance
-(maj-dances) yt-dlp --write-description https://www.youtube.com/@majorettes-dance/videos
-(dancekpt) yt-dlp --write-description https://www.youtube.com/@dancekpt/videos
-https://www.facebook.com/pages/Ippokampaki/202393566477856/photos/
 
 
 ===============================================================
@@ -1774,57 +1751,6 @@ python game2text.py;
 env WINEPREFIX="$HOME/.wine64" WINEARCH=win64  LANG=ja_JP.SJIS wine anex86.exe;
 env WINEPREFIX="$HOME/.wine64" WINEARCH=win64LANG=ru_RU.utf8 wine
 
-===============================================================
-
-UPS that has a 12V battery with a capacity of 2.9 AH and 300 watts
-A = Wt / V. Here, 270 W / 12V = 22.5 A.
-2.9 AH / 22.5 A = 0.1288*60 = 7.70 = 0.70/*60 = 0.48 ===7 minutes 44 seconds.
-
-MEGETHOS SYSTEM: 
-27GB except home/tmp/mnts + 45 GB HOME + 20GB MEDIAs = 100GB    - Downl = 1.6T
-100GB x 12m = 1.2T x 2 = 2T. x10 =20χρόνια/2=10χρόνια.
-
-===============================================================
-============  FILMS TO DOWNLOAD if found ======================
-Rosemaries Tochter 1976 
-Plan 9 from Aliexpress
-Plan 10 from Outer Space 
-
-
-===============================================================
-FILMS TO SEE
-SHADO UFO  (series)
-   PAN KLEKS W KOSMOSIE reż Krzysztof Gradowski 
-     Earth vs. the Flying Saucers
-    Forbidden Planet
-    Journey to the Center of Time 
-    Invaders from Mars
-    Mars Attacks!
-    fido
-    The Lost Skeleton of Cadavra returns
-    Invasion of the Body Snatchers 
-     I Married a Monster From Outer Space
-     A Trip to Mars (Sci-Fi, 1918) (Silent Film) 
-   Brigitte Bardot | The Girl in the Bikini (1952) 
-youtube
-https://www.youtube.com/@postmodernjukebox/videos
-
-
-webrips
-https://nudography.life/
-
-όμορφη καργιόλα
-τα είδες όλα
-και τώρα γουστάρεις
-πρωκτικό να κάνεις
-με τρεις-τρεις να πηγαίνεις
-καβλί να μην αφήνεις
-αρούφηκτο να μείνει
-
-Γυμνή καργιόλα
-στην ακρογιαλιά τα βγάζεις
-και τα αγόρια προκαλείς
-με τις ορθομένες ρόγες σου
 
 
 
