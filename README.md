@@ -1,6 +1,6 @@
 # Useful bashscript commands for 
 - Editing videos
-- Downloading Streamings
+- Downloading / Editing Streamings
 - Debian terminal comamnds
 - HDD / SDD commands
 - Image Manipulation / process (montage, cropping, adjusting, color correction)
