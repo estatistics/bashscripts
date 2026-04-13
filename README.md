@@ -38,3 +38,10 @@ A high-performance Bash script designed to batch-convert MKV files into H.265 (H
 
 📈 Performance
 - On an AMD RX 5700 XT, this script typically processes 1080p video at 3x-5x real-time speed. To reach 100% GPU utilization (ENC), it is recommended to run two instances of the script in parallel.
+📋 Prerequisites
+
+Ensure you have the following installed:
+-    FFmpeg (with libopus support)
+-    GStreamer (with va-api plugins)
+-    Python3 (for frame calculation)
+-    amdgpu_top (optional, to monitor hardware usage)
